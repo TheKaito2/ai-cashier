@@ -12,6 +12,10 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.10"
+    # the proposer is plain Swift loops over a 720p frame: unoptimised Debug
+    # code takes ~18 s per frame, optimised well under a second
+    SWIFT_OPTIMIZATION_LEVEL: "-O"
+    SWIFT_COMPILATION_MODE: wholemodule
     CODE_SIGN_STYLE: Automatic
     TARGETED_DEVICE_FAMILY: "1,2"
     MARKETING_VERSION: "4.1.1"
