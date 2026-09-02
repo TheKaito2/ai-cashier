@@ -28,7 +28,7 @@ Four things were found broken on the target hardware or in production use before
 | D18 | Paper's "one process" | KEEP | Reworded to match |
 | D19 | Research harness, ONNX, INT8 | KEEP | — |
 
-161 tests pass after the changes (136 before).
+161 tests passed after the changes (136 before); 167 after Phase 6 added the path and self-test checks.
 
 ## The four faults
 
@@ -133,6 +133,9 @@ See F3. **CHANGE**, done: `item_weight_for_scan`; the till keeps `_pan_baseline_
 
 ### D19 — Research harness, ONNX export, INT8 decision
 **KEEP.** Unchanged, except that E2 and E3 gained the D7/D8 ablation columns.
+
+### F5 — found by the Swift port (3 Sep 2026): the query was never centred
+`SkuGallery.project` subtracted the unit-length centre from the **raw** query vector (norm in the tens) and normalised afterwards. The gallery rows were centred; the query effectively was not. On the synthetic set that left known products at ~0.39 and a stranger at ~0.27 against a threshold of 0.38 — a margin of 0.12 that every E5 number so far was calibrated on. Porting the gallery to Swift (which normalised the query first) made the two implementations disagree on every score and exposed it. **Fix:** normalise the query before subtracting the centre. Re-measured on the same set: same product 0.92, different products −0.13 on average (0.90 for the hardest pair), stranger 0.67. The placeholder `reject_below_cosine` moves from 0.38 to 0.75 in both implementations; E5 still calibrates the real value. The docstring and paper numbers (0.81 / −0.18 / 0.88) were replaced by the re-measured ones (0.80 / −0.13 / 0.92). A cross-language fixture test (`ios/AICashier/Tests/RecognitionTests.swift`) now pins every gallery score to Python's.
 
 ## What this round could not verify
 

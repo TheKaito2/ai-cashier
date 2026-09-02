@@ -44,10 +44,15 @@ final class GalleryTests: XCTestCase {
         let f = try FX.load()
         let g = FX.gallery(from: f)
         let queries = f.expected_matches.keys.sorted()
-        let before = queries.map { g.match(f.embeddings[$0]!)[0].score }
+        func scores() -> [[String: Float]] {
+            queries.map { q in Dictionary(uniqueKeysWithValues: g.match(f.embeddings[q]!, topK: 20).map { ($0.skuId, $0.score) }) }
+        }
+        let before = scores()
         g.enrol("extra", [f.embeddings["never-enrolled-snack-0"]!])
-        let after = queries.map { g.match(f.embeddings[$0]!)[0].score }
-        for (a, b) in zip(before, after) { XCTAssertEqual(a, b, accuracy: 1e-6) }
+        let after = scores()
+        for (b, a) in zip(before, after) {
+            for (sku, score) in b { XCTAssertEqual(a[sku]!, score, accuracy: 1e-6, sku) }   // every old SKU: unchanged
+        }
     }
 }
 

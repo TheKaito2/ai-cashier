@@ -14,7 +14,7 @@
   ]
  },
  "thresholds": {
-  "reject_below_cosine": 0.38,
+  "reject_below_cosine": 0.75,
   "ambiguous_margin": 0.35,
   "appearance_temperature": 0.07
  },
@@ -11100,115 +11100,115 @@
  "expected_matches": {
   "lays-flat-original-2": {
    "top1": "lays-flat-original",
-   "score": 0.38735,
+   "score": 0.93387,
    "accepted": true,
    "ranking": [
     [
      "lays-flat-original",
-     0.38735
+     0.93387
     ],
     [
      "lays-ridged-original",
-     0.36409
+     0.91144
     ],
     [
-     "pepsi",
-     -0.16107
+     "crystal-water",
+     -0.51521
     ]
    ]
   },
   "lays-ridged-original-2": {
-   "top1": "lays-flat-original",
-   "score": 0.38598,
+   "top1": "lays-ridged-original",
+   "score": 0.9293,
    "accepted": true,
    "ranking": [
     [
-     "lays-flat-original",
-     0.38598
-    ],
-    [
      "lays-ridged-original",
-     0.37468
+     0.9293
     ],
     [
-     "pepsi",
-     -0.1671
+     "lays-flat-original",
+     0.92078
+    ],
+    [
+     "tasto-seaweed",
+     -0.48535
     ]
    ]
   },
   "tasto-seaweed-2": {
    "top1": "tasto-seaweed",
-   "score": 0.35881,
-   "accepted": false,
+   "score": 0.92545,
+   "accepted": true,
    "ranking": [
     [
      "tasto-seaweed",
-     0.35881
+     0.92545
     ],
     [
      "pepsi",
-     0.11815
+     0.0771
     ],
     [
      "crystal-water",
-     -0.06898
+     -0.07782
     ]
    ]
   },
   "pepsi-2": {
    "top1": "pepsi",
-   "score": 0.39122,
+   "score": 0.89859,
    "accepted": true,
    "ranking": [
     [
      "pepsi",
-     0.39122
+     0.89859
     ],
     [
      "crystal-water",
-     0.11749
+     0.45386
     ],
     [
      "tasto-seaweed",
-     -0.00569
+     0.10134
     ]
    ]
   },
   "crystal-water-2": {
    "top1": "crystal-water",
-   "score": 0.40431,
+   "score": 0.95589,
    "accepted": true,
    "ranking": [
     [
      "crystal-water",
-     0.40431
+     0.95589
     ],
     [
      "pepsi",
-     0.26012
+     0.37725
     ],
     [
      "tasto-seaweed",
-     -0.09162
+     -0.11093
     ]
    ]
   },
   "never-enrolled-snack-2": {
    "top1": "tasto-seaweed",
-   "score": 0.27118,
+   "score": 0.63773,
    "accepted": false,
    "ranking": [
     [
      "tasto-seaweed",
-     0.27118
+     0.63773
     ],
     [
      "pepsi",
-     0.12059
+     0.0852
     ],
     [
      "crystal-water",
-     -0.08538
+     -0.10523
     ]
    ]
   }

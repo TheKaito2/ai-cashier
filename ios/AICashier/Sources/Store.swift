@@ -50,6 +50,14 @@ final class Store: ObservableObject {
         previewTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.refreshPreview() }
         }
+        // `--demo-scan`: calibrate on the bundled empty mat and scan the demo
+        // frame straight away (screenshots, the Simulator, a first look)
+        if ProcessInfo.processInfo.arguments.contains("--demo-scan") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.calibrateMat()
+                self?.scan()
+            }
+        }
     }
 
     private func switchCamera() {
@@ -82,7 +90,9 @@ final class Store: ObservableObject {
     /// Photograph the empty mat.  This is the one picture the app keeps, taken
     /// by staff with nobody in shot.
     func calibrateMat() {
-        guard let frame = camera.latest() else { status = "No camera frame"; return }
+        // the demo image already has products on it; its empty mat ships beside it
+        let demoMat = (camera is DemoCamera) ? DemoCamera(resource: "demo_mat", ext: "png").latest() : nil
+        guard let frame = demoMat ?? camera.latest() else { status = "No camera frame"; return }
         pipeline.calibrate(frame)
         matCalibrated = true
         if let cg = frame.cgImage() {

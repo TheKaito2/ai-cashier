@@ -25,7 +25,7 @@ struct Decision: Equatable {
 /// defaults and, like them, placeholders until calibrated on real photographs.
 struct FusionConfig {
     var appearanceTemperature: Float = 0.07
-    var rejectBelowCosine: Float = 0.38
+    var rejectBelowCosine: Float = 0.75
     var ambiguousMargin: Float = 0.35
 }
 

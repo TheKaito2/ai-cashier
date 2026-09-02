@@ -60,7 +60,8 @@ def main() -> int:
                              color_layout=ct.colorlayout.RGB)],
         outputs=[ct.TensorType(name="embedding")],
         minimum_deployment_target=ct.target.iOS17,
-        compute_precision=ct.precision.FLOAT16,
+        # FLOAT32: 4 MB instead of 2, and no half-precision surprises on any compute unit
+        compute_precision=ct.precision.FLOAT32,
     )
     ml.short_description = "AI Cashier product embedder: MobileNetV3-Small trunk, 576-d"
     ml.author = "Group 3, Assumption College Sriracha"
