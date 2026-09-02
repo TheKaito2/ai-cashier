@@ -1,0 +1,27 @@
+AI Cashier v4 - Group 3, Assumption College Sriracha
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party components and their licences (audit 2026-09-02, docs/research/02):
+
+  PySide6 (Qt for Python)      LGPL v3        till UI. Replaced PyQt5 (GPL v3).
+  FastAPI, uvicorn, requests   MIT / BSD      server
+  numpy, opencv-contrib-python BSD / Apache-2 image handling, ArUco metrology
+  onnxruntime                  MIT            runs the embedder on the till
+  qrcode, pillow               BSD / HPND     payment QR
+  torchvision MobileNetV3 weights  BSD-3      the exported embedder (models/*.onnx)
+  lgpio                        Unlicense      GPIO on the Pi 5, for the HX711 (recalled - verify)
+  open_clip_torch, timm        MIT / Apache-2 research-only backbones (requirements-research.txt)
+
+NOT covered by the Apache licence:
+
+  models/chips_model.pt and models/drinks_model.pt were trained with
+  Ultralytics YOLOv8, which is AGPL-3.0. Those weights are AGPL-derived. They
+  are used only as the closed-set baseline (research/, experiment E1) and as an
+  auto-labelling tool; nothing in scanner/ or server/ imports ultralytics or
+  loads them (tests/test_no_ultralytics.py enforces this). Do not ship them
+  inside a proprietary product.
+
+Datasets referenced by the research harness keep their own terms:
+  RPC              CC BY-NC-SA 4.0
+  Products-10K     non-commercial research only
+  GroceryVision    see grocery-vision.github.io

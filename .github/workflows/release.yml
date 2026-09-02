@@ -1,0 +1,45 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -r requirements.txt pyinstaller==6.22.2
+      - name: Icon
+        run: python build/windows/make_icon.py
+      - name: Freeze
+        run: pyinstaller --noconfirm build/windows/AICashier.spec
+      - name: Smoke test the frozen build
+        shell: pwsh
+        run: pwsh build/windows/smoke.ps1
+      - name: Installer
+        shell: pwsh
+        run: |
+          $env:APP_VERSION = (Get-Content VERSION -Raw).Trim()
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc build\windows\installer.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed" }
+      - name: Checksum
+        shell: pwsh
+        run: |
+          $h = (Get-FileHash dist\AI-Cashier-Setup-Windows.exe -Algorithm SHA256).Hash.ToLower()
+          "$h  AI-Cashier-Setup-Windows.exe" | Out-File -Encoding ascii dist\AI-Cashier-Setup-Windows.exe.sha256
+          Get-Content dist\AI-Cashier-Setup-Windows.exe.sha256
+          Get-Item dist\AI-Cashier-Setup-Windows.exe | Select-Object Name, Length
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            dist/AI-Cashier-Setup-Windows.exe
+            dist/AI-Cashier-Setup-Windows.exe.sha256
+          generate_release_notes: true

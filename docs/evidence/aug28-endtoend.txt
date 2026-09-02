@@ -1,0 +1,36 @@
+$ python app.py --demo          # full loop, one process
+  AI CASHIER SYSTEM v3  -  Group 3, Assumption College Sriracha
+    database  /Users/kristantos/Downloads/AI-Cashier-v3/data/products.json
+    weights   /Users/kristantos/Downloads/AI-Cashier-v3/models
+  Loading chips model...
+  ✓ chips model loaded
+  Loading drinks model...
+  ✓ drinks model loaded
+  ⚠ general model not found at /Users/kristantos/Downloads/AI-Cashier-v3/models/general_model.pt
+  
+  Detection service ready with 2 models
+  INFO:server.main:Detection service initialized
+    server ready on http://127.0.0.1:8000
+    dashboard http://127.0.0.1:8000/   till http://127.0.0.1:8000/checkout   analytics http://127.0.0.1:8000/admin
+  
+    server-only mode - Ctrl+C to stop
+  INFO:server.main:WebSocket connected. Total connections: 1
+  INFO:server.main:WebSocket disconnected. Total connections: 0
+  INFO:server.main:WebSocket connected. Total connections: 1
+  INFO:server.main:WebSocket disconnected. Total connections: 0
+  INFO:server.main:WebSocket connected. Total connections: 1
+  INFO:server.main:WebSocket disconnected. Total connections: 0
+  INFO:server.main:WebSocket connected. Total connections: 1
+  INFO:server.main:WebSocket disconnected. Total connections: 0
+
+$ ./demo_sale.sh                # scan -> cart -> QR -> confirm -> stock
+  stock before   lays-flat-original=52  tasto-japanese-seaweed=35
+  scanned        Added 1x Lay's Flat Original Flavor to cart
+  scanned        Added 1x Tasto Japanese Seaweed Flavor to cart
+  cart           2 items over 2 lines
+  payment        subtotal B44.00  VAT 7% B3.08  total B47.08
+  qr             1190 bytes of base64 PNG
+  confirmed      SALE-20260830155352-879f08fe
+  stock after    lays-flat-original=51  (was 52)
+  stock after    tasto-japanese-seaweed=34  (was 35)
+  analytics      6 sales today, B231.12 taken

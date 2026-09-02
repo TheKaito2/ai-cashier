@@ -1,0 +1,20 @@
+# What the till needs to run.  Research and export dependencies
+# (torch, ultralytics, matplotlib...) are in requirements-research.txt -
+# the Raspberry Pi never has to install them.
+# LGPL, so the till can be released under Apache-2.0. PyQt5 is GPL.
+PySide6>=6.6
+fastapi>=0.104
+uvicorn[standard]>=0.24
+qrcode>=7.4
+pillow>=10.0
+requests>=2.31
+numpy>=1.24
+
+# opencv-contrib, not plain opencv: cv2.aruco is a contrib module.
+opencv-contrib-python>=4.8
+# runs the embedder without importing a training framework
+onnxruntime>=1.16
+
+# the load cell, on the Pi only.  lgpio drives the Pi 5's RP1 GPIO; the PyPI
+# hx711 package needs RPi.GPIO, which does not (docs/research/09, D5).
+lgpio>=0.2 ; platform_machine == "aarch64"

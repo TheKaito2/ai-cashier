@@ -1,0 +1,21 @@
+$ python docs/tools/compare_databases.py   # the two product files, before the merge
+
+  product                             server   scanner    merged   verdict
+  ----------------------------------------------------------------------------
+  Lay's Flat Original Flavor          THB 20    THB 20    THB 20   agrees
+  Lay's Nori Seaweed Flavor           THB 25    THB 20    THB 25   PRICE MISMATCH -> server price kept
+  Lay's Ridged Original Flavor        THB 22    THB 25    THB 22   PRICE MISMATCH -> server price kept
+  Snackjack Original Flavor           THB 18    THB 15    THB 18   PRICE MISMATCH -> server price kept
+  Tasto Japanese Seaweed Flavor       THB 24    THB 20    THB 24   PRICE MISMATCH -> server price kept
+  Tasto Original Flavor               THB 22    THB 20    THB 22   PRICE MISMATCH -> server price kept
+  Enter Chips                              -    THB 18    THB 18   scanner-only: recovered into the merged file
+  Atreus Chips                             -    THB 22    THB 22   scanner-only: recovered into the merged file
+  Coca-Cola Bottle                    THB 18    THB 18    THB 18   agrees
+  Coca-Cola Can                       THB 14    THB 14    THB 14   agrees
+  Crystal Drinking Water               THB 7     THB 7     THB 7   agrees
+  Fanta Fruit Punch Flavor            THB 14    THB 14    THB 14   agrees
+  Pepsi                               THB 14    THB 14    THB 14   agrees
+  Sprite                              THB 14    THB 14    THB 14   agrees
+  ----------------------------------------------------------------------------
+  7 of 14 products disagreed between the two files.
+  After the merge there is one file: data/products.json

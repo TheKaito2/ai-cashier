@@ -1,0 +1,26 @@
+# The till as a service on the Raspberry Pi (docs/research/09, D16).
+#
+#   mkdir -p ~/.config/systemd/user
+#   cp deploy/ai-cashier.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now ai-cashier
+#   loginctl enable-linger $USER          # start at boot without a login
+#
+# Logs: journalctl --user -u ai-cashier -f
+# Edit ExecStart for the flags you want (--lan, --scale hx711, --fullscreen).
+[Unit]
+Description=AI Cashier till and dashboard
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/AI-Cashier-v4
+ExecStart=%h/AI-Cashier-v4/.venv/bin/python app.py --scale hx711 --fullscreen
+Restart=on-failure
+RestartSec=3
+Environment=QT_QPA_PLATFORM=wayland
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=graphical-session.target

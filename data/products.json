@@ -1,0 +1,513 @@
+{
+  "products": [
+    {
+      "id": "lays-flat-original",
+      "name": "Lay's Flat Original Flavor",
+      "price": 20.0,
+      "category": "chips",
+      "stock": 51,
+      "min_stock": 10,
+      "yolo_class": "Lay's-Flat-Original-Flavor",
+      "barcode": "8850718813681",
+      "size": "75g",
+      "description": "Original flavor potato chips"
+    },
+    {
+      "id": "lays-nori-seaweed",
+      "name": "Lay's Nori Seaweed Flavor",
+      "price": 25.0,
+      "category": "chips",
+      "stock": 41,
+      "min_stock": 10,
+      "yolo_class": "Lay's-Nori-Seaweed-Flavor",
+      "barcode": "8850718813698",
+      "size": "75g",
+      "description": "Nori seaweed flavored potato chips"
+    },
+    {
+      "id": "lays-ridged-original",
+      "name": "Lay's Ridged Original Flavor",
+      "price": 22.0,
+      "category": "chips",
+      "stock": 40,
+      "min_stock": 10,
+      "yolo_class": "Lay's-Ridged-Original-Flavor",
+      "barcode": "8850718813704",
+      "size": "75g",
+      "description": "Ridged cut original flavor potato chips"
+    },
+    {
+      "id": "snackjack-original",
+      "name": "Snackjack Original Flavor",
+      "price": 18.0,
+      "category": "chips",
+      "stock": 58,
+      "min_stock": 15,
+      "yolo_class": "Snackjack-Original-Flavor",
+      "barcode": "8851932306089",
+      "size": "60g",
+      "description": "Original flavor popcorn"
+    },
+    {
+      "id": "tasto-japanese-seaweed",
+      "name": "Tasto Japanese Seaweed Flavor",
+      "price": 24.0,
+      "category": "chips",
+      "stock": 34,
+      "min_stock": 10,
+      "yolo_class": "Tasto-Japanese-Seaweed-Flavor",
+      "barcode": "8858702402248",
+      "size": "80g",
+      "description": "Japanese seaweed flavored potato chips"
+    },
+    {
+      "id": "tasto-original",
+      "name": "Tasto Original Flavor",
+      "price": 22.0,
+      "category": "chips",
+      "stock": 40,
+      "min_stock": 10,
+      "yolo_class": "Tasto-Original-Flavor",
+      "barcode": "8858702402231",
+      "size": "80g",
+      "description": "Original flavor potato chips"
+    },
+    {
+      "id": "coca-cola-bottle",
+      "name": "Coca-Cola Bottle",
+      "price": 18.0,
+      "category": "drinks",
+      "stock": 100,
+      "min_stock": 20,
+      "yolo_class": "CocaCola-Bottle",
+      "barcode": "8851959132012",
+      "size": "300ml",
+      "description": "Coca-Cola in glass bottle"
+    },
+    {
+      "id": "coca-cola-can",
+      "name": "Coca-Cola Can",
+      "price": 14.0,
+      "category": "drinks",
+      "stock": 146,
+      "min_stock": 30,
+      "yolo_class": "CocaCola-Can",
+      "barcode": "8851959132029",
+      "size": "325ml",
+      "description": "Coca-Cola in aluminum can"
+    },
+    {
+      "id": "crystal-water",
+      "name": "Crystal Drinking Water",
+      "price": 7.0,
+      "category": "drinks",
+      "stock": 198,
+      "min_stock": 50,
+      "yolo_class": "Crystal-Water",
+      "barcode": "8850228000015",
+      "size": "600ml",
+      "description": "Pure drinking water"
+    },
+    {
+      "id": "fanta-fruit-punch",
+      "name": "Fanta Fruit Punch Flavor",
+      "price": 14.0,
+      "category": "drinks",
+      "stock": 80,
+      "min_stock": 20,
+      "yolo_class": "Fanta-FruitPunch-Flavor",
+      "barcode": "8851959132067",
+      "size": "325ml",
+      "description": "Fanta fruit punch flavored soda"
+    },
+    {
+      "id": "pepsi",
+      "name": "Pepsi",
+      "price": 14.0,
+      "category": "drinks",
+      "stock": 119,
+      "min_stock": 25,
+      "yolo_class": "Pepsi",
+      "barcode": "8858998580019",
+      "size": "325ml",
+      "description": "Pepsi cola"
+    },
+    {
+      "id": "sprite",
+      "name": "Sprite",
+      "price": 14.0,
+      "category": "drinks",
+      "stock": 90,
+      "min_stock": 20,
+      "yolo_class": "Sprite",
+      "barcode": "8851959132050",
+      "size": "325ml",
+      "description": "Sprite lemon-lime soda"
+    },
+    {
+      "id": "atreus",
+      "name": "Atreus Chips",
+      "price": 22.0,
+      "category": "chips",
+      "stock": 30,
+      "min_stock": 10,
+      "yolo_class": "Atreus",
+      "barcode": "8850987654321",
+      "size": "85g",
+      "description": "Atreus brand chips"
+    },
+    {
+      "id": "enter",
+      "name": "Enter Chips",
+      "price": 18.0,
+      "category": "chips",
+      "stock": 50,
+      "min_stock": 10,
+      "yolo_class": "Enter",
+      "barcode": "8850123456789",
+      "size": "70g",
+      "description": "Enter brand chips"
+    }
+  ],
+  "sales": [
+    {
+      "id": "SALE-20250802104635",
+      "payment_id": "31d3b2bd-5304-4613-bfb3-0ec9a6ed83ee",
+      "timestamp": "2025-08-02T10:46:35.977418",
+      "items": [
+        {
+          "product_id": "lays-nori-seaweed",
+          "product_name": "Lay's Nori Seaweed Flavor",
+          "quantity": 1,
+          "price": 25.0,
+          "total": 25.0
+        }
+      ],
+      "subtotal": 25.0,
+      "tax": 1.7500000000000002,
+      "total": 26.75,
+      "payment_method": "qr_code"
+    },
+    {
+      "id": "SALE-20250807152500",
+      "payment_id": "4cfa8ac3-b4ee-4fca-a88a-a627d4b10d97",
+      "timestamp": "2025-08-07T15:25:00.199081",
+      "items": [
+        {
+          "product_id": "snackjack-original",
+          "product_name": "Snackjack Original Flavor",
+          "quantity": 1,
+          "price": 18.0,
+          "total": 18.0
+        }
+      ],
+      "subtotal": 18.0,
+      "tax": 1.2600000000000002,
+      "total": 19.26,
+      "payment_method": "qr_code"
+    },
+    {
+      "id": "SALE-20250807153407",
+      "payment_id": "60a3ce39-8ce9-4f64-b443-466b5637dad6",
+      "timestamp": "2025-08-07T15:34:07.836610",
+      "items": [
+        {
+          "product_id": "lays-nori-seaweed",
+          "product_name": "Lay's Nori Seaweed Flavor",
+          "quantity": 1,
+          "price": 25.0,
+          "total": 25.0
+        }
+      ],
+      "subtotal": 25.0,
+      "tax": 1.7500000000000002,
+      "total": 26.75,
+      "payment_method": "qr_code"
+    },
+    {
+      "id": "SALE-20260830153922",
+      "payment_id": "4225de63-3bbc-4f70-b209-fdc8b711b670",
+      "timestamp": "2026-08-30T15:39:22.852601",
+      "items": [
+        {
+          "product_id": "lays-nori-seaweed",
+          "product_name": "Lay's Nori Seaweed Flavor",
+          "quantity": 2,
+          "price": 25.0,
+          "total": 50.0
+        },
+        {
+          "product_id": "pepsi",
+          "product_name": "Pepsi",
+          "quantity": 1,
+          "price": 14.0,
+          "total": 14.0
+        }
+      ],
+      "subtotal": 64.0,
+      "tax": 4.48,
+      "total": 68.48,
+      "payment_method": "qr_code"
+    },
+    {
+      "id": "SALE-20260830155113",
+      "payment_id": "4e8f3777-f709-45de-84dd-6105fc4d9967",
+      "timestamp": "2026-08-30T15:51:13.462417",
+      "items": [
+        {
+          "product_id": "lays-flat-original",
+          "product_name": "Lay's Flat Original Flavor",
+          "quantity": 1,
+          "price": 20.0,
+          "total": 20.0
+        }
+      ],
+      "subtotal": 20.0,
+      "tax": 1.4000000000000001,
+      "total": 21.4,
+      "payment_method": "qr_code"
+    },
+    {
+      "id": "SALE-20260830155113",
+      "payment_id": "0bb2d9b9-8c0a-4cb6-ab92-2ad7b4ac9897",
+      "timestamp": "2026-08-30T15:51:13.581256",
+      "items": [
+        {
+          "product_id": "crystal-water",
+          "product_name": "Crystal Drinking Water",
+          "quantity": 2,
+          "price": 7.0,
+          "total": 14.0
+        }
+      ],
+      "subtotal": 14.0,
+      "tax": 0.9800000000000001,
+      "total": 14.98,
+      "payment_method": "qr_code"
+    },
+    {
+      "id": "SALE-20260830155113",
+      "payment_id": "4516741e-3196-4ad6-a90c-7f1eed6f4a01",
+      "timestamp": "2026-08-30T15:51:13.670423",
+      "items": [
+        {
+          "product_id": "coca-cola-can",
+          "product_name": "Coca-Cola Can",
+          "quantity": 4,
+          "price": 14.0,
+          "total": 56.0
+        }
+      ],
+      "subtotal": 56.0,
+      "tax": 3.9200000000000004,
+      "total": 59.92,
+      "payment_method": "qr_code"
+    },
+    {
+      "id": "SALE-20260830155113",
+      "payment_id": "3fa1dd9c-9292-4730-b9ce-eabdc5822e2d",
+      "timestamp": "2026-08-30T15:51:13.746856",
+      "items": [
+        {
+          "product_id": "snackjack-original",
+          "product_name": "Snackjack Original Flavor",
+          "quantity": 1,
+          "price": 18.0,
+          "total": 18.0
+        }
+      ],
+      "subtotal": 18.0,
+      "tax": 1.2600000000000002,
+      "total": 19.26,
+      "payment_method": "qr_code"
+    },
+    {
+      "id": "SALE-20260830155352-879f08fe",
+      "payment_id": "879f08fe-0aaa-4c57-8097-aff387c1169e",
+      "timestamp": "2026-08-30T15:53:52.962637",
+      "items": [
+        {
+          "product_id": "lays-flat-original",
+          "product_name": "Lay's Flat Original Flavor",
+          "quantity": 1,
+          "price": 20.0,
+          "total": 20.0
+        },
+        {
+          "product_id": "tasto-japanese-seaweed",
+          "product_name": "Tasto Japanese Seaweed Flavor",
+          "quantity": 1,
+          "price": 24.0,
+          "total": 24.0
+        }
+      ],
+      "subtotal": 44.0,
+      "tax": 3.08,
+      "total": 47.08,
+      "payment_method": "qr_code"
+    }
+  ],
+  "pending_payments": {
+    "4225de63-3bbc-4f70-b209-fdc8b711b670": {
+      "payment_id": "4225de63-3bbc-4f70-b209-fdc8b711b670",
+      "timestamp": "2026-08-30T15:39:22.833365",
+      "items": [
+        {
+          "product_id": "lays-nori-seaweed",
+          "product_name": "Lay's Nori Seaweed Flavor",
+          "quantity": 2,
+          "price": 25.0,
+          "total": 50.0
+        },
+        {
+          "product_id": "pepsi",
+          "product_name": "Pepsi",
+          "quantity": 1,
+          "price": 14.0,
+          "total": 14.0
+        }
+      ],
+      "subtotal": 64.0,
+      "tax": 4.48,
+      "total": 68.48,
+      "status": "completed",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAAGuAQAAAADgjt83AAADP0lEQVR4nO1cUW7bMAylZAP9VIAdYEdxbjbsZvZRegP7s4ANDiRlW4kadO68Zare+0glW0SdpweKpKU4pk9g8Z+xIoJZBlCSAZRkACUZQEkGUJIBlGQAJRlASZmUECv6rdtTw0Rhlk7D3EurY+0Kgg6fi/huHmYnqyTY7JN+UKe9UfWid+e7cZiADFVQsjjnLtKYXpj7qSV3VYcirR8jEQ3OuWc/5DH4g+MjYPYxJYNIZfj+5ogm57gPb45/Xj40+z3ArExK2vcvTy0x0dw6GeEonPTfPMzKpqSRQIQkPn1zGpfQ4FoLXO2GXnvyQx6DPzg+AmYPKZmcoI294bI4TXRssZFVSO+7653ZQXiYFUlJa3+63U1MusQ0rIsNda86QrKd5z2kh9n/US8JMeFVWOqrNZRu3JYiK58gE65XJWzhR7PqRZyHhiSmnMDWjYUU1EtqVQnHimtnLZGFikbGSGuVClRSr9mg+czri4Qfi+OeJHq1j4a1fLIX8Z/2kEfhD1soYPYweh2/rbU0Er8xyfWg9ZLFMdGiaZDUUAxgMkMlcQmpQDreF5u1G2/ECAVxSdUq6TRc1Wu3IUk36sviWFqDSurdOdCYy2DNdqS75r+bkDQnhkoqz3FYZMEmBi3JmwfZu+tGAmTCFfsSjqUSilUSK6it0UgMWOBLavYl464N2l7vbZuSNDhJnA52IVVaoZ9tsaE9lUldS7ouQSXlTrc/yZeQrj2rNmL5JKS1eqik5rd9tEqAbkKStIu3fYVPt//zHKffPMjNm72oEtRLvsB0+3PeCVPiRiiNY6NUsOIUPd3+nPM4lKQyWiBJNiChXlL8dPsTqmqCPdvRmHWPRqy+ZkAmXOnOgQiS8zjrSQtpXdSXxG2wz33Io/CHLRQwe0hJkt4Quaulw6IN2TYtXR0VD3aByXqrahTLIhw3M96lN9tdrDjlTrc/SSW8bxXYjgjbbgJTDlRS8nT7s872BQlJwpzcsOPBwzU5blHEd/Mw+wsnLXg7x2dhimXCm1dBjkO1a3LSDKeNp8m7cYnn+GxXiTgU++EBRK9fYroPwuE3GoucNw+ze4CSDKAkAyjJAEoygJIMoCQDKMnwbyn5BV68POVy5MQkAAAAAElFTkSuQmCC",
+      "session_id": "default"
+    },
+    "efdd6709-6101-42a5-875f-2ad19d5013eb": {
+      "payment_id": "efdd6709-6101-42a5-875f-2ad19d5013eb",
+      "timestamp": "2026-08-30T15:45:53.870657",
+      "items": [
+        {
+          "product_id": "lays-flat-original",
+          "product_name": "Lay's Flat Original Flavor",
+          "quantity": 1,
+          "price": 20.0,
+          "total": 20.0
+        },
+        {
+          "product_id": "tasto-japanese-seaweed",
+          "product_name": "Tasto Japanese Seaweed Flavor",
+          "quantity": 1,
+          "price": 24.0,
+          "total": 24.0
+        }
+      ],
+      "subtotal": 44.0,
+      "tax": 3.08,
+      "total": 47.08,
+      "status": "pending",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAAGuAQAAAADgjt83AAADEElEQVR4nO1cQW7jMAykZAM5OsA+YJ+SfG1/Zj+lDyhgHwM44EIkJbtRUNStuoVWMwcjrkQ0JglySMpxTJ/A3X9GighiGaCSDFBJBqgkA1SSASrJAJVkgEoyQCV1qoRYMG63c8d0CReicBmY6cJrXB9k+1rFs3mIFVbJoNYnouHmQhXj5BPzS//Mm2CADE2o5O6cO4cPyyk4Q8fMc7gdVqIpLEzOuZ/+ksfgD+43QOwDKhlujqZzcBrXk3jOlo/eEfsQIFanSvrsL8svbbQxLSGELCGADIX+m4dYlSoh4xuRl3BINkZXhbjOsmV92FfFs3mIfVeNMw7r04sBXtKwl+wwSyxhSztGYfcbEEtazjgk2WWULokupAQUPQde0riXrOoRHHKPBJT9RXhJ+ARe0jYv6ZSzsjpDZCgaQcxzwnbwksZ5CWlLnlLaCfHlIaogltRtbl+mxiErgu1iUUUWQiwxcoJKuM1YMm8hg5S4agJSrhIrYbDXys3tC3gJx+ChHES5ihU/CsSStmfCN+euy4ndVeOGUNi74z8645NbYy0/9yUPwh8VUEDsvRpnK2ooRRCNKkpJ5MwJapyWp33Dq6PLy4kd0b2nMOhjWsJ5gWu3OhokitwcXcaKns1DrLCXLH1wi7uTSTBPv8UtulXch6fza28LZ6UoMECGVnqvAaT8NGaXjZLsV1EJt9pVW5WDsJKTh8I4foKXVG5uX8BLFOueru4orC3LliqezUPs23qvszVbn02H0aGn1rtqtL1VcUkcJJ2Tll3IOJWb23/9fAntDqfxnpJYpEEsqd7cvtBZtTF5yTbjk16aDnPQVWtYbHIGstf6wltbcRwsvXq9tQFPVc92FP6wRItn6ClykDTjs1iCGqd6c/svd9VIjx1x6pfEt4ONlyDj1G9uX8hLxnj4dTurphvNc9AvqdncvlQsmVNzPnXtd0cdwV6rNrcvxEs4nY7mN/018JL/wdy+1Lt9lH7EJDrNNvdDV61NMYffaKzSbh5ij4BKMkAlGaCSDFBJBqgkA1SSASrJ8G9V8hdqNaDwMPpfEgAAAABJRU5ErkJggg==",
+      "session_id": "default"
+    },
+    "4e8f3777-f709-45de-84dd-6105fc4d9967": {
+      "payment_id": "4e8f3777-f709-45de-84dd-6105fc4d9967",
+      "timestamp": "2026-08-30T15:51:13.422288",
+      "items": [
+        {
+          "product_id": "lays-flat-original",
+          "product_name": "Lay's Flat Original Flavor",
+          "quantity": 1,
+          "price": 20.0,
+          "total": 20.0
+        }
+      ],
+      "subtotal": 20.0,
+      "tax": 1.4000000000000001,
+      "total": 21.4,
+      "status": "completed",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAAGuAQAAAADgjt83AAADV0lEQVR4nO1cbW6jQAx9HpD6E27Qo9Ab9EirvVnmKHuASPAzUpBXYxtoMqrUaZFSMn6KCAlYGYzlj2cTYnwDc/iOFOBiGVwlGVwlGVwlGVwlGVwlGVwlGVwlGVwlh1ZJJAMitUDsAXqbZG8mesO8HO8fuMhShGIJgYvlYMGpk7crmEcAg3waG8aQvjt117vzXJMZnlklWO7+FcBqDGYgbGWymko62a3k2Lc77CQWJcR0FwImIjELCUC/apFfg4vtpZI2+2Z6YUQCGLi2BLTX/X4tuNixVdKkOIMUdi5Ef1LEifSSws6Ftlzl0YssQyg83+Bin/qSiT58yfH1QozuTBz7MxDfz7Djnb65JjM8s0rAdzilPDalq3Z0zE/xGqdWvqRfE9dJ3EvDUtTQGxqWPJZoIVIetshShGIJgYvl2BzEYhvNTf2rJTIbc+K+pHa+hJPzwDA2ZjSyJ0aT9sRU3ErqFpvaJboo5pStGjkPSWYtAB3w2goRSgWeXwyre0huBMauqlfRFNYylNuTD3FtwcV2jjgQNJp+aB/ndPtRUxfv41TuS3hNTjj1cbY0xZyMGo37kpp9SbOlplArUSp26/Etaa1HnJpZNQiGxUqs2hFWTRj6D4WO5yXVTiFB7QBbKZPKm75holdJSSzBfdgiSxGKJQQu9mkfpzu3UvAigTGlSri7pqMzYViKnLVQdk1meGaVYJtBs65vd8u4LtSaMW2el1Q9XzKL32iFX7NNQuyb1A6eieP7ueXYj8e5tuBi+/MlbLw81I0o06bZiE45+kRjrTaJD9zrXY9v0GlXq2wWzs1rHNTOqvFCtmq1s240V/EZetReCbfpbU4z0bbHJylvJM5oL9C7fc9yu3eYVePbZs7WAfSIc/jbHXZ6ti+B//YyHd2uNJrSJzjktZUiFEvUw6qNaTu3YhYkLxsyaa6EzkhZZ9UqF5vtIeDYz2Qtv23mJM296jySz70+x+3+6ROg4/Kc8DaPlE3Te7evdrFOWBKbaNS8RDap7/drFvkluNjuDH2TTGDWPUI3MoZ/raYnHF95TV1+9GvBxQ6tkunuiZt5+68SO/pHHcojF1mIUCqgcLEM5P/ReA+3kgyukgyukgyukgyukgyukgyukgyukgyuEtzjP6e91Z4T6IJ2AAAAAElFTkSuQmCC",
+      "session_id": "default"
+    },
+    "0bb2d9b9-8c0a-4cb6-ab92-2ad7b4ac9897": {
+      "payment_id": "0bb2d9b9-8c0a-4cb6-ab92-2ad7b4ac9897",
+      "timestamp": "2026-08-30T15:51:13.533445",
+      "items": [
+        {
+          "product_id": "crystal-water",
+          "product_name": "Crystal Drinking Water",
+          "quantity": 2,
+          "price": 7.0,
+          "total": 14.0
+        }
+      ],
+      "subtotal": 14.0,
+      "tax": 0.9800000000000001,
+      "total": 14.98,
+      "status": "completed",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAAGuAQAAAADgjt83AAADKklEQVR4nO1cUY6bMBB9Nkj76dwgRyE36JGqvVk4Sg+wEvmMBJrK4zEkuKrKNmnK+r2PLAFGi4en8bzxOE7wCUz+M1YAzQrQJQXokgJ0SQG6pABdUoAuKUCXFKBLdu2S3hkATA64tPFcC3e6OOdOmPL1wwsfciv8ZgsFzUqI4hz0zwj7GAB0QyMi8eMcxtV99GSBKlwyWaDo3VsUx42gP0wpjCzh5tUPuQ1+4/0GmhVoizNhgEO4Oj1Cfxxbh7C+iZ5E3S65KHEaQffDOZ120A1P+29/BJr9Ly5pYg6CGEtGyFmz1+OY5hl5j1NRJ7LUafneCtTgkosqmDYexkQkXJ2c9UIY0w1J4pxe+pAb4bcaJNCshKxwTufGFDySxilAjVMXuZAVroUMUSV8XnNouUqWVMwSxCQ1Bw87yty4pQ/rJRWzRBYVE2yysTw20UJM6GT67GJsnmYPZolEHtxVYQE9GhCpMtdjyZKqZxxECozrgn2KKlqrN8nDWFJz9ipxipE7RsQayiKHFw5xxqk5ltwmqWO6sJCGM85XeN3+MfUSzPLG4ksUPzrPWCGFsaTuWCImfRuLIEvBnlW1r/K6/V8q4SaFEShSDnJ37j6t3cXYPM2ekL12SevmlMRWALUL6Y4qZEnNVbUuZaqWiChpTCLPKSxjCWqfcdal2JAzWkth5xVAzjiVdkcfLGQ47Q3Q1hLtQootBejkGvuRXv2QW+E3Wyho9rs14RuNg1Cu46RZiLEEtbNksHTV6vJ3wjiltcxL9v26/QMq9Bm3Oy1u2k2WfiQq4bprr5KkTNIzeWFYI8gsfsiS/b5u/6h1nMFCxk1pLWUorJegdrOQWwX6KG/m7RYqeSyMzFpob2PbCL/VoKJdW1MLhA8lyIj+W9y1hakVI038Fj7aWQ7vYmyeZs9zyZS3fB4acd+1aJIbT7ibvE5Otr866bphgsQIIv1R4AAXvx4guxqbp9kzf3MAqU0t9b3OjQTsVUPtnLzkvX39Yd4YrOeOI+Q9JSdvVr/f29g2wm81+Ppmjr/RuMv35mm2Bl1SgC4pQJcUoEsK0CUF6JICdEmBf+uSn50WWB/QyVx2AAAAAElFTkSuQmCC",
+      "session_id": "default"
+    },
+    "4516741e-3196-4ad6-a90c-7f1eed6f4a01": {
+      "payment_id": "4516741e-3196-4ad6-a90c-7f1eed6f4a01",
+      "timestamp": "2026-08-30T15:51:13.632852",
+      "items": [
+        {
+          "product_id": "coca-cola-can",
+          "product_name": "Coca-Cola Can",
+          "quantity": 4,
+          "price": 14.0,
+          "total": 56.0
+        }
+      ],
+      "subtotal": 56.0,
+      "tax": 3.9200000000000004,
+      "total": 59.92,
+      "status": "completed",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAAGuAQAAAADgjt83AAADNElEQVR4nO1cW46jQAy0m0jzSW6Qo5Cb7dXCUfYG8DkSqFe2u4HEGs32bLIJ6aoPBJNYAXfJj8I9HOkHmMNPrIhg5gCXOMAlDnCJA1ziAJc4wCUOcIkDXLJPl1BUXNbLQQ/N5m/UxSmftvr1aRfPFmB2Z5a0tvqkBLFPOqVKO5Edrr6HBXB4Z5dQXn2JFsoI+3OiSiJN/gAs2flyh3uadfGTNbtQf/pkzUIP/LVvAbOXc0mrZUoTqRtm1rTDfHzYr/0VYPYqLmliChkjM/VCi/7YROqZ2bJQF+Oq02LdHGpwyciCgxUnosELN2ZJO6m90c/5/NSbLEQoNTDA7KvqdcVFaKGtrwQP64kd0ONU3OOQXgpBcrm6tsibL4MllbJEYMXJ5ZobK19UTYFeUrf22qTqtVNpTUljWlpW2pQvloWQcSo260/Cl/FAfNbCVdrhnj8i9UctZl/iJgsQSr68AmYeFhw0eFi0GFRsTRnnJhXhPU7V5OpVNxOxVZvgOMzS90oYYWaVYvmX5Z4n3mQpQrGFAmYOopAo5gP1kmXo6j0Od8ORIo3pwF3KO/CkQy2TA50Wqdr1qkxvoSXrJeuLYVSv1XbC09LPUG50NLtYhXKjr0FVq1ShP8jhQ/oZSTZypmmn+23SfNLqrX7Z2bMVIpQa1BNLBtHSri7TFJKKbOu4CWIJ1T6rNqi0lvS1zTySJiBMIb3Bcod7TTTGNMK4iiapRbbXgKhL6lboySZI2iXjeHEeLNn5cod/jyWXfJkEWCtJrkbqEUtqnxyIW+WElvmSPCJtxQlm6CuPJZS4MS1afZ4hWOpY9DhU+3zJdoYgQ5mTqbJ5DbiLZwswe+jevosxYnL7cRLAkjo52drqk2mvuh8nbbLQ0ZK83++5N1mIUGpggNnXLpFRAZPfdQBJA4oQRCsUmbA/t5OMJ92YlSHA7F12gDY5biwVrZ0tL4uRcaqdL1nQKi8aocR8iDTK2cik1Im7erYAs0ft7etMIMl7+ywBWdrZMAoL4FDV3r5eDyfZTa57QU8x5k1/MaIueZPlLgTjfzTuct0CzG4BlzjAJQ5wiQNc4gCXOMAlDnCJw/91yR9iBjoVURWAdQAAAABJRU5ErkJggg==",
+      "session_id": "default"
+    },
+    "3fa1dd9c-9292-4730-b9ce-eabdc5822e2d": {
+      "payment_id": "3fa1dd9c-9292-4730-b9ce-eabdc5822e2d",
+      "timestamp": "2026-08-30T15:51:13.712628",
+      "items": [
+        {
+          "product_id": "snackjack-original",
+          "product_name": "Snackjack Original Flavor",
+          "quantity": 1,
+          "price": 18.0,
+          "total": 18.0
+        }
+      ],
+      "subtotal": 18.0,
+      "tax": 1.2600000000000002,
+      "total": 19.26,
+      "status": "completed",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAAGuAQAAAADgjt83AAADS0lEQVR4nO1cW2rrMBCdkQ39tOEuIEtxdnCXVLKzeCldQMH5DNjMZUaS7UQUqja9rapzKMavQ6zRMC+NykIfwOI+wiICLQFEkgAiSQCRJIBIEkAkCSCSBBBJAoikaJGMHEAjt0Rjr/f6heNrS3zelze2XLhsRjW0ThTz/tHw8iR81DNVGnsu52/9yEy4XIIHaG+LZImGort6C8JHUltyYebnKZiblJYHB1qRImnvbwzTQjxMRKJ/phdS6NgcaF8lklG9y6lfmI8XZjkd5hCmfMmvvQ+g/RRb0qjFWEI0oveFaNanjbDaFxr2JgXzlqAGkVwsg2mJxsOV5dxtFmRhOfVEPsU5lji2TLhcwu+nkSSYNThp/HlMfu5fKWJsDrTHasm5U43YoJcawhJ1M4mo0ph9iRkzJiBBFVoya+QhcmNGglqEqMX0BbakZo8z6ZkZj6gR/ulmZAarucGW1E4bD2ZVrmzOxvyMj17PqjkWzHovVODYMuByXq6DRvvK+87tqBnZ3QsHeJzCp9t9Pi4hXzTRSDUegp/ZzuBxqrYlTdCDwWc2Ie+xxNgfwiVynLo9jlggMkRNCL5nzXbM40TNKWJsDrQv0JKzPwSrEhoJVgVZ6yrQkmrXcbrXlofpzxyXaxph6iZd0SGSkUlXh5u5rLE50B5dL2l8CCuhz8iKJmtpTYHotV6dpH3t1RdI1ONYhKJxbAhOVisCj1P1mnBLoaAm1qumbWpr2XXsbzOgwsaWCZdLqCwTnkKOE4smVqEPlbZQq4ctqdzjyFZsXRFXgreUBzlO3TR+Nn25PMnOvhisf017p9FD/3um+3P1km5dzInGI74a8h7US8qdbvegXrWzhiRr7XVXS1sfQEtqpY3r3j5FPLMdfW3cmaOX6HutmtaFlT3yDSV6eeq3SluMUL73IzPhcgkeoL2902JptUxPGn7MutNipuGF/YYtX59XyNj7ggkkmaAukXRXFvGltcbvE45xie0K/Rkf+S6A9ujVvtsdoKQY/6qqXHjtOZmiScEEVKaTdNsRQLvWEqulWVxibdNbexL6S6rue6V903xoqb/ppkcmXCeN8T8ai5w3B9o9IJIEEEkCiCQBRJIAIkkAkSSASBL8X5H8A+3qy5dzagExAAAAAElFTkSuQmCC",
+      "session_id": "default"
+    },
+    "879f08fe-0aaa-4c57-8097-aff387c1169e": {
+      "payment_id": "879f08fe-0aaa-4c57-8097-aff387c1169e",
+      "timestamp": "2026-08-30T15:53:52.959605",
+      "items": [
+        {
+          "product_id": "lays-flat-original",
+          "product_name": "Lay's Flat Original Flavor",
+          "quantity": 1,
+          "price": 20.0,
+          "total": 20.0
+        },
+        {
+          "product_id": "tasto-japanese-seaweed",
+          "product_name": "Tasto Japanese Seaweed Flavor",
+          "quantity": 1,
+          "price": 24.0,
+          "total": 24.0
+        }
+      ],
+      "subtotal": 44.0,
+      "tax": 3.08,
+      "total": 47.08,
+      "status": "completed",
+      "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAa4AAAGuAQAAAADgjt83AAADM0lEQVR4nO1cUW7bMAwlFQP9VG6Qozg32JGK3sw+Sg4QwP4sYEMDSYlOo26rUm+dKr4PI7JNJKYI6vFRDgZ4AKt7xArAzDKYSzKYSzKYSzKYSzKYSzKYSzKYSzKYS+p0CQTGoMPBhwDgF726APR0EHi+fani2ZyZ7RwlXmYf5CDD6UAF0IGuLnf32QRkaMIlKyIe+dMhQH/pAM8poeDzBAAjIn71jyyDK7w/wsz+7JLxuCKAf0WAGTEM/hW39ejXZh+DmdXpku790/MRAsDSId2B/VDlszkz29slByIiQAHSAYynhbIKrT1MU+h8H4jW7vRtZXCF90eY2d65ZFbO4a+aX9YujMcrwPjjCvG6/9S3OTOr0iUQ7jAwe02lL+eXVNlssBqn3Up44KImHRJn1aVIamKLkoZzyUTMgwUSlUqYkrCqRufS0KKk5ul2u2mvS2SqFDQxfJi43iw7tuI0adYnxRXPVOOQyJYOlF/mThYgPH/ljyyFK7ZgmNnveElkIz71bGIRTAkllcOWS6D1FSdIeTPFJeZmKKr9zbJjK06j7PUgERE4NqSeocsSNHqBw8eipGG9BJiuDtumAUkjKbVQINmK07TZiIjh5UQ9PgbzWAkVZq+IPExt46qerRSu2KIZM08ZZH6SGmeT0WCkyBlPaWdSpCl1PVshXKlBU7wkyL60iU+rqqZyW6QkxktaVugXWV1CPNClpMJue9Wsxmm8Ej5oHyfEsBANRbOKnrMap+0ogbftYGnh8FClNYuSpivhJckifmOqsQmcGsOml1Q/3e7TURJUjQfpDqf88mZRshWncYU+SFGTVNj4Kamw0vezKKl6ut1ee9V81vyL5zSrmELfsPbKAH4z5/nSAfSXJ8klcQ+BNosre7ZSuGKLFt/tC8pZFZpfrNvXttka3+0b+a0tWDFWwsxZpY+zYnixPs73mO6HtVdgIhLudkLrzoFb2P6S1s28amn8/taRt5ZwkvmPfuSHYGZ/j5dMqpKkcnhTZi2XtB2TM1c4naaMlYgI7RwQmqJ/PGC85FtMdyHQ/qOxynlzZnYPc0kGc0kGc0kGc0kGc0kGc0kGc0mGf+uSnzolSCLnKFADAAAAAElFTkSuQmCC",
+      "session_id": "default"
+    }
+  },
+  "settings": {
+    "store_name": "Smart Checkout Store",
+    "tax_rate": 0.07,
+    "currency": "\u0e3f",
+    "detection_confidence": 0.6,
+    "theme": "dark"
+  }
+}

@@ -1,0 +1,43 @@
+/* Local icon glyphs.
+
+   Every page used to pull Font Awesome from cdnjs, so a shop with no internet
+   got a till covered in empty boxes.  These are the icons the pages actually
+   reference, drawn from fonts that ship with the machine.  Same class names,
+   so no page markup had to change. */
+
+.fas, .fa { font-style: normal; display: inline-block; line-height: 1; }
+.fas::before { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+
+.fa-arrow-left::before   { content: "\2190"; }
+.fa-arrow-up::before     { content: "\25B2"; }
+.fa-arrow-down::before   { content: "\25BC"; }
+.fa-times::before        { content: "\00D7"; }
+.fa-plus::before         { content: "\002B"; }
+.fa-minus::before        { content: "\2212"; }
+.fa-check::before        { content: "\2713"; }
+.fa-check-circle::before { content: "\2705"; }
+.fa-circle::before       { content: "\25CF"; }
+.fa-info-circle::before  { content: "\2139"; }
+.fa-search::before       { content: "\1F50D"; }
+.fa-home::before         { content: "\1F3E0"; }
+.fa-box::before          { content: "\1F4E6"; }
+.fa-boxes::before        { content: "\1F4E6"; }
+.fa-shopping-cart::before{ content: "\1F6D2"; }
+.fa-cart-plus::before    { content: "\1F6D2"; }
+.fa-camera::before       { content: "\1F4F7"; }
+.fa-video::before        { content: "\1F4F9"; }
+.fa-video-slash::before  { content: "\1F6AB"; }
+.fa-qrcode::before       { content: "\1F4F1"; }
+.fa-barcode::before      { content: "\2016"; }
+.fa-chart-line::before   { content: "\1F4C8"; }
+.fa-calculator::before   { content: "\1F9EE"; }
+.fa-credit-card::before  { content: "\1F4B3"; }
+.fa-university::before   { content: "\1F3E6"; }
+.fa-mobile-alt::before   { content: "\1F4F2"; }
+.fa-desktop::before      { content: "\1F5A5"; }
+.fa-receipt::before      { content: "\1F9FE"; }
+.fa-trash::before        { content: "\1F5D1"; }
+.fa-sync::before         { content: "\21BB"; }
+.fa-list::before         { content: "\2261"; }
+.fa-trophy::before       { content: "\1F3C6"; }
+.fa-exclamation-triangle::before { content: "\26A0"; }

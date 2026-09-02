@@ -1,0 +1,11 @@
+$ for p in / /inventory /cart /checkout /admin /monitor; do curl -o /dev/null -w "%{http_code}" $BASE$p; done
+
+  route          v2 (two processes, :8010)    v3 (one process, :8000)
+  ----------------------------------------------------------------------
+  /              200                          200
+  /inventory     404                          200   <- fixed
+  /cart          200                          200
+  /checkout      404                          200   <- fixed
+  /admin         200                          200
+  /monitor       200                          200
+  /models/chips_model.pt 200                          404   <- trained weights no longer downloadable

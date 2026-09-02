@@ -1,0 +1,31 @@
+$ pytest tests/ -v
+
+  ============================= test session starts ==============================
+  collecting ... collected 26 items
+  test_checkout.py::test_cart_groups_repeats_into_one_line PASS    [  3%]
+  test_checkout.py::test_total_is_subtotal_plus_seven_percent PASS [  7%]
+  test_checkout.py::test_unknown_product_is_refused PASS           [ 11%]
+  test_checkout.py::test_cannot_buy_more_than_the_shelf_holds PASS [ 15%]
+  test_checkout.py::test_empty_cart_cannot_be_paid_for PASS        [ 19%]
+  test_checkout.py::test_confirming_payment_takes_the_stock_down PASS [ 23%]
+  test_checkout.py::test_a_payment_cannot_be_confirmed_twice PASS  [ 26%]
+  test_checkout.py::test_sales_rung_up_in_the_same_second_get_different_ids PASS [ 30%]
+  test_checkout.py::test_payment_carries_a_scannable_qr PASS       [ 34%]
+  test_checkout.py::test_analytics_counts_only_confirmed_sales PASS [ 38%]
+  test_database.py::test_every_product_has_the_fields_the_till_needs PASS [ 42%]
+  test_database.py::test_product_ids_are_unique PASS               [ 46%]
+  test_database.py::test_yolo_classes_are_unique PASS              [ 50%]
+  test_database.py::test_lookup_by_yolo_class_finds_the_right_product PASS [ 53%]
+  test_database.py::test_lookup_by_unknown_yolo_class_returns_none PASS [ 57%]
+  test_database.py::test_restock_adds_and_persists PASS            [ 61%]
+  test_database.py::test_stock_cannot_go_negative PASS             [ 65%]
+  test_database.py::test_currency_symbol_is_not_mojibake PASS      [ 69%]
+  test_pages.py::test_page_is_reachable[/] PASS                    [ 73%]
+  test_pages.py::test_page_is_reachable[/inventory] PASS           [ 76%]
+  test_pages.py::test_page_is_reachable[/cart] PASS                [ 80%]
+  test_pages.py::test_page_is_reachable[/checkout] PASS            [ 84%]
+  test_pages.py::test_page_is_reachable[/admin] PASS               [ 88%]
+  test_pages.py::test_page_is_reachable[/monitor] PASS             [ 92%]
+  test_pages.py::test_no_page_loads_anything_from_the_internet PASS [ 96%]
+  test_pages.py::test_trained_weights_are_not_served_over_http PASS [100%]
+  ============================== 26 passed in 1.00s ==============================

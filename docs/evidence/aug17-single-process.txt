@@ -1,0 +1,25 @@
+$ python app.py                     # v3: one command, one process
+  AI CASHIER SYSTEM v3  -  Group 3, Assumption College Sriracha
+    database  /Users/kristantos/Downloads/AI-Cashier-v3/data/products.json
+    weights   /Users/kristantos/Downloads/AI-Cashier-v3/models
+  Loading chips model...
+  ✓ chips model loaded
+  Loading drinks model...
+  ✓ drinks model loaded
+  ⚠ general model not found at /Users/kristantos/Downloads/AI-Cashier-v3/models/general_model.pt
+  
+  Detection service ready with 2 models
+  INFO:server.main:Detection service initialized
+    server ready on http://127.0.0.1:8000
+    dashboard http://127.0.0.1:8000/   till http://127.0.0.1:8000/checkout   analytics http://127.0.0.1:8000/admin
+  
+    server-only mode - Ctrl+C to stop
+
+$ pgrep -f 'app.py' | wc -l
+  1
+
+  v2 needed, in order:
+    1.  python setup_hybrid.py        write hybrid_config.json with absolute paths
+    2.  python launch.py              spawn process 1: uvicorn  (cwd must be the web folder)
+                                      wait 5s, then spawn process 2: the PyQt scanner
+    3.  if either died you restarted both by hand

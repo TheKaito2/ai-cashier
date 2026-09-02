@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventory - AI Cashier</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="stylesheet" href="/static/css/landing.css">
+<link rel="stylesheet" href="/static/css/dash.css">
+</head>
+<body>
+<div class="page"><div class="page__inner">
+
+  <header data-mast></header>
+
+  <div class="title">
+    <p class="title__eyebrow">Stock</p>
+    <h1>Inventory</h1>
+    <p>Everything the detection models can recognise, what it sells for, and how much is left on the shelf. Restock writes straight to the same file the till reads.</p>
+  </div>
+
+  <section class="figures" aria-label="Stock at a glance">
+    <div class="figure"><div class="figure__n" id="totalProducts">0</div><div class="figure__k">products tracked</div></div>
+    <div class="figure"><div class="figure__n" id="lowStockCount">0</div><div class="figure__k">at or below minimum</div></div>
+    <div class="figure"><div class="figure__n" id="todayRevenue">฿0</div><div class="figure__k">taken today</div></div>
+  </section>
+
+  <section class="panel" aria-label="Product list">
+    <div class="toolbar">
+      <div class="search-box">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" id="searchInput" placeholder="Search products..." aria-label="Search products">
+      </div>
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="chips">Chips</button>
+        <button class="filter-btn" data-filter="drinks">Drinks</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="products-table">
+        <thead>
+          <tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="productsTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</div></div>
+
+<div class="modal" id="restockModal" role="dialog" aria-modal="true" aria-labelledby="restockTitle">
+  <div class="modal-content">
+    <h3 id="restockTitle">Restock</h3>
+    <p style="color:var(--text-secondary);margin:.5rem 0 1.25rem" id="restockProductName"></p>
+    <input type="number" id="restockQuantity" min="1" placeholder="Quantity to add"
+           style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:.5rem;background:var(--bg-secondary);color:var(--text-primary);margin-bottom:1.25rem">
+    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeRestockModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmRestock()">Add stock</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/mast.js"></script>
+<script src="/static/js/theme.js"></script>
+<script src="/static/js/inventory.js"></script>
+</body>
+</html>

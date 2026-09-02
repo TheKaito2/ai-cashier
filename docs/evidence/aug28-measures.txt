@@ -1,0 +1,14 @@
+$ python docs/tools/measure.py   # v2 (Aug 10 baseline)  vs  v3 (Aug 28)
+
+                                            v2        v3
+  ------------------------------------------------------
+  python lines (app code)                 8834      2102
+  python lines (tests)                       0       195
+  files tracked                             59        43
+  copies of the trained weights              6         2
+  product databases                          2         1
+  OS processes to start it                   2         1
+  commands to start it                       2         1
+  pages with no route                        2         0
+  files fetched from a CDN                   6         0
+  automated tests                            0        26

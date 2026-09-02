@@ -1,0 +1,36 @@
+{
+  "_": "Hardware and rig settings live here. Shop settings (store name, tax, PromptPay id, receipts, dashboard PIN) live in the SQLite settings table.",
+  "display": {
+    "width": 1240,
+    "height": 720,
+    "fullscreen": false,
+    "fps": 30
+  },
+  "camera": {
+    "default_source": 0,
+    "ip_camera_url": "http://192.168.1.109:8080/video",
+    "use_ip_camera": false,
+    "resolution": {
+      "width": 1280,
+      "height": 720
+    },
+    "fourcc": "MJPG",
+    "lock_exposure": false
+  },
+  "rig": {
+    "marker_mm": 60.0,
+    "marker_dict": "DICT_4X4_50",
+    "marker_positions_mm": null
+  },
+  "scale": {
+    "dout_pin": 5,
+    "sck_pin": 6,
+    "counts_per_gram": null,
+    "offset_counts": null
+  },
+  "recognition": {
+    "embedder": "models/mobilenet_v3_small.onnx",
+    "views_per_enrolment": 5,
+    "scan_frames": 5
+  }
+}

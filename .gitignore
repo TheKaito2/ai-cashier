@@ -1,0 +1,38 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+logs/
+
+# generated, not authored
+data/checkout.sqlite3*
+data/gallery.npz
+data/mat_background.png
+research/results/
+paper/tables/
+paper/figures/
+
+# the capture session's photographs - large, and specific to one rig
+research/data/
+
+# v3 YOLO weights (Ultralytics, AGPL-3.0) and research-only backbones: never in the public repo
+models/*.pt
+models/*-int8*.onnx
+models/resnet18.onnx*
+models/mobilenet_v3_large.onnx*
+
+# packaging output
+dist/
+build/pyinstaller/
+*.spec.bak
+.venv-coreml/
+
+# Xcode
+ios/**/*.xcodeproj
+ios/**/xcuserdata/
+ios/**/DerivedData/
+ios/**/.build/
+
+# PyInstaller work dir
+build/pyinstaller/
+build/AICashier/
