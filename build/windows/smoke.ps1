@@ -7,8 +7,9 @@ $exe = Join-Path (Get-Location) "dist\AICashier\AI Cashier.exe"
 $data = Join-Path $env:LOCALAPPDATA "AI Cashier"
 if (-not (Test-Path $exe)) { throw "missing $exe" }
 
-& $exe --self-test
-if ($LASTEXITCODE -ne 0) { throw "self-test failed with exit code $LASTEXITCODE" }
+# a windowed exe returns to the shell at once; wait for it and read its exit code
+$st = Start-Process -FilePath $exe -ArgumentList "--self-test" -Wait -PassThru
+if ($st.ExitCode -ne 0) { throw "self-test failed with exit code $($st.ExitCode)" }
 $log = Get-Content (Join-Path $data "logs\app.log") -Raw
 if ($log -notmatch "self-test ok") { throw "no 'self-test ok' line in the log:`n$log" }
 Write-Host (($log -split "`n" | Select-String "self-test ok" | Select-Object -Last 1).Line)
