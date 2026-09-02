@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Cashier</title>
+<meta name="description" content="A self-checkout till that recognises products with a camera and can be taught a new product in about thirty seconds. Windows installer, Raspberry Pi rig, and an iPhone build.">
+<link rel="icon" href="/img/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<a class="skip" href="#download">Skip to download</a>
+
+<header class="mast">
+  <a class="mast__brand" href="#top" aria-label="AI Cashier, home">
+    <img src="/img/icon.png" alt="" width="28" height="28">
+    <span>AI Cashier</span>
+  </a>
+  <nav class="mast__nav" aria-label="Sections">
+    <a href="#how">How it works</a>
+    <a href="#refuses">What it refuses</a>
+    <a href="#download">Download</a>
+    <a href="#research">Research</a>
+    <a href="https://github.com/TheKaito2/ai-cashier">GitHub</a>
+  </nav>
+</header>
+
+<main id="top">
+
+<section class="hero" aria-labelledby="hero-h">
+  <div class="hero__copy">
+    <p class="eyebrow">Self-checkout for shops without an IT department</p>
+    <h1 id="hero-h">Teach the till a product in thirty seconds.</h1>
+    <p class="lede">A camera looks at what the customer put down. The till matches each item against the products it has been taught and checks the basket by weight. A new product is five photographs and a price. No retraining, no model, no data team.</p>
+    <div class="cta">
+      <a class="btn btn--primary" href="https://github.com/TheKaito2/ai-cashier/releases/latest/download/AI-Cashier-Setup-Windows.exe">
+        <span class="btn__k">Download for Windows</span>
+        <span class="btn__m" id="dl-meta">latest release</span>
+      </a>
+      <a class="btn btn--ghost" href="#iphone">Build it for iPhone</a>
+    </div>
+    <p class="fine">Windows 10 / 11, 64-bit. Works with any webcam, and has a demo mode with none. Unsigned installer: see the <a href="#smartscreen">SmartScreen note</a>.</p>
+  </div>
+
+  <figure class="receipt" aria-label="A sample receipt from the till">
+    <pre>
+      AI CASHIER  ·  SAMPLE SHOP
+      RECEIPT        SALE-260902-1A2B
+      02/09/2026            13:42
+      ------------------------------
+      Lay's Flat Original 75g   20.00
+      Pepsi 325 ml              14.00
+      Tasto Nori Seaweed 68g    20.00
+      ------------------------------
+      Subtotal                  54.00
+      VAT 7%                     3.78
+      TOTAL                     57.78
+      ------------------------------
+      basket 483 g  expected 483 g
+      weight check            passed
+      unknown packet     not charged
+      taught today   Tasto Nori 68g
+      ------------------------------
+      sample, not a real sale
+    </pre>
+  </figure>
+</section>
+
+<section class="shot" aria-label="The till">
+  <img src="/img/till.png" alt="The till screen: camera view on the left with two products found and priced, the cart with VAT and total on the right, a large PAY button." width="1440" height="900" loading="eager" fetchpriority="high">
+  <figcaption>The till. Two products recognised on the mat, priced, one tap from the cart.</figcaption>
+</section>
+
+<section id="how" class="steps" aria-labelledby="how-h">
+  <h2 id="how-h">How a sale runs</h2>
+  <ol>
+    <li>
+      <span class="n">1</span>
+      <h3>Put it down</h3>
+      <p>The customer sets the items on the mat. One press of SCAN watches a few frames and looks each item up in the product gallery.</p>
+    </li>
+    <li>
+      <span class="n">2</span>
+      <h3>Check the read</h3>
+      <p>Each product appears with its name and price. An item the till has never seen is flagged as unknown, not charged as the nearest thing, and can be taught on the spot.</p>
+    </li>
+    <li>
+      <span class="n">3</span>
+      <h3>Pay</h3>
+      <p>The basket weight is checked against the cart, a PromptPay QR is shown for the total, and on confirmation the sale is written and stock comes down.</p>
+    </li>
+  </ol>
+</section>
+
+<section class="shot shot--pair" aria-label="Teaching and paying">
+  <figure>
+    <img src="/img/enrol.png" alt="The Add a product dialog: camera preview with the product outlined, name, price, category, stock, a restricted-sale picker, and the scale reading 75 g." width="880" height="611" loading="lazy">
+    <figcaption>Teaching a product: five views, a name, a price. The scale records its weight.</figcaption>
+  </figure>
+  <figure>
+    <img src="/img/payment.png" alt="The Scan to pay dialog with the total and a PromptPay QR code." width="420" height="500" loading="lazy">
+    <figcaption>Paying: a PromptPay QR any Thai banking app opens with the amount filled in.</figcaption>
+  </figure>
+</section>
+
+<section id="refuses" class="refuses" aria-labelledby="ref-h">
+  <h2 id="ref-h">What it refuses to do</h2>
+  <p class="lede lede--tight">Most of the engineering went into the things a naive camera till gets wrong.</p>
+  <ul>
+    <li><b>Charge for a guess.</b> Below a calibrated similarity the till says <em>unknown</em> and offers to teach the product, instead of naming whatever it resembles.</li>
+    <li><b>Sell alcohol at the wrong hour.</b> 11:00 to 24:00 only, and never without a member of staff confirming the buyer is 20 or over.</li>
+    <li><b>Show tobacco to a customer.</b> Staff-only, never displayed, as Thai law requires.</li>
+    <li><b>Keep a picture of you.</b> No frame is ever written to disk. Only a product's numbers persist. A test fails if anyone changes that.</li>
+    <li><b>Trust the camera alone.</b> The basket on the pan must weigh what the cart says it should, within a tolerance set from measurement, not taste.</li>
+  </ul>
+</section>
+
+<section id="download" class="dl" aria-labelledby="dl-h">
+  <h2 id="dl-h">Get it</h2>
+  <div class="dl__grid">
+    <article class="card card--win">
+      <p class="eyebrow">Windows</p>
+      <h3>Installer</h3>
+      <p>The full till and its dashboard, for a laptop with a webcam. Installs per user, no admin prompt. Start it in demo mode with no camera at all.</p>
+      <a class="btn btn--primary" href="https://github.com/TheKaito2/ai-cashier/releases/latest/download/AI-Cashier-Setup-Windows.exe">
+        <span class="btn__k">Download AI-Cashier-Setup-Windows.exe</span>
+        <span class="btn__m" id="dl-meta-2">latest release</span>
+      </a>
+      <p class="fine">Checksum: <a href="https://github.com/TheKaito2/ai-cashier/releases/latest/download/AI-Cashier-Setup-Windows.exe.sha256">SHA-256</a> · <a href="https://github.com/TheKaito2/ai-cashier/releases">all releases</a></p>
+      <details id="smartscreen">
+        <summary>"Windows protected your PC"</summary>
+        <p>The installer is not code-signed, so SmartScreen shows a blue warning the first time. Click <b>More info</b>, then <b>Run anyway</b>. Do this only for a file you downloaded from this page or from the GitHub releases page, and check the SHA-256 if you want to be sure.</p>
+      </details>
+    </article>
+
+    <article class="card" id="iphone">
+      <p class="eyebrow">iPhone</p>
+      <h3>Build it yourself</h3>
+      <p>The whole till runs on an iPhone with its own camera: teach, scan, cart, PromptPay, inventory. It is not on the App Store, so you build it once with Xcode and a free Apple ID.</p>
+      <ol class="mini">
+        <li>Clone the repository on a Mac with Xcode 26.</li>
+        <li>Open <code>ios/AICashier</code>, sign in with your Apple ID under Signing.</li>
+        <li>Plug in the iPhone, turn on Developer Mode, press Run.</li>
+      </ol>
+      <p class="fine">A free Apple ID installs for seven days at a time; a paid developer account lifts that. Details in <a href="https://github.com/TheKaito2/ai-cashier/blob/main/ios/README.md">ios/README.md</a>.</p>
+    </article>
+
+    <article class="card">
+      <p class="eyebrow">Raspberry Pi</p>
+      <h3>The real rig</h3>
+      <p>A Pi 5, a webcam on a stand, a ring light, a 5 kg load cell, four printed markers. What to buy, how to wire it, how to calibrate it.</p>
+      <p><a href="https://github.com/TheKaito2/ai-cashier/blob/main/docs/HARDWARE.md">docs/HARDWARE.md</a></p>
+    </article>
+  </div>
+</section>
+
+<section id="research" class="research" aria-labelledby="res-h">
+  <h2 id="res-h">The research behind it</h2>
+  <p>The till is a retrieval system, not a classifier: propose, embed, match against a gallery, fuse with weight and size. The repository carries the experiment harness (E1 to E9), a paper draft with a verified bibliography, a dossier on Thai law and the self-checkout market, and a review of every architectural decision with its evidence.</p>
+  <ul class="links">
+    <li><a href="https://github.com/TheKaito2/ai-cashier/tree/main/docs/research">The dossier</a> <span>law, market, how the commercial systems work, literature, venues</span></li>
+    <li><a href="https://github.com/TheKaito2/ai-cashier/blob/main/docs/research/09-architecture-review.md">The architecture review</a> <span>nineteen decisions, kept or changed, with sources</span></li>
+    <li><a href="https://github.com/TheKaito2/ai-cashier/blob/main/paper/main.tex">The paper draft</a> <span>tables and figures are generated by the harness, never typed</span></li>
+    <li><a href="https://github.com/TheKaito2/ai-cashier/blob/main/docs/PRIVACY.md">Privacy</a> <span>what the cameras see, keep, and never keep</span></li>
+  </ul>
+</section>
+
+</main>
+
+<footer class="foot">
+  <p><b>Group 3</b>, Engineering Design and Innovation, Assumption College Sriracha. Punn, Pleum, Athens, Kit, Bible, Pokpong. Instructor Mr. John Victor S. Opiña.</p>
+  <p>Code under Apache-2.0. Nothing on this page is legal advice.</p>
+</footer>
+
+<script>
+(async () => {
+  const set = (t) => document.querySelectorAll('#dl-meta, #dl-meta-2').forEach(e => e.textContent = t);
+  try {
+    const r = await fetch('https://api.github.com/repos/TheKaito2/ai-cashier/releases/latest', {headers: {Accept: 'application/vnd.github+json'}});
+    if (!r.ok) throw new Error(r.status);
+    const rel = await r.json();
+    const asset = (rel.assets || []).find(a => a.name === 'AI-Cashier-Setup-Windows.exe');
+    const mb = asset ? (asset.size / 1048576).toFixed(0) + ' MB' : '';
+    const when = new Date(rel.published_at).toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'});
+    set([rel.tag_name, mb, when].filter(Boolean).join(' · '));
+  } catch (e) {
+    set('see GitHub releases');
+  }
+})();
+</script>
+</body>
+</html>

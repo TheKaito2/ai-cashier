@@ -1,0 +1,12 @@
+// The landing page: an assets-only Worker (Cloudflare's current path for a
+// static site; Pages is the legacy one).  Deploy from the repo root with
+//   cd site && npx wrangler deploy
+{
+  "name": "ai-cashier-site",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./public",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
