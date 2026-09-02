@@ -33,6 +33,17 @@ frame ──► propose ──► embed ──► match against a gallery ──
 Enrolling a product is appending rows to that gallery. There is no gradient step
 anywhere in the loop, and the till can sell the new line on the very next frame.
 
+## Get it
+
+- **Windows**: the installer on the [latest release](https://github.com/TheKaito2/ai-cashier/releases/latest)
+  (`AI-Cashier-Setup-Windows.exe`, SHA-256 beside it). Per-user install, no admin
+  prompt, a demo mode that needs no camera. Unsigned, so SmartScreen warns once:
+  *More info → Run anyway*. Details in `docs/DISTRIBUTION.md`.
+- **iPhone**: the whole till on the phone camera, built from `ios/` with Xcode
+  and a free Apple ID. `ios/README.md`.
+- **Raspberry Pi**: the real rig. `docs/HARDWARE.md`.
+- The landing page is `site/`, served from Cloudflare.
+
 ## Run it
 
 ```bash
@@ -84,7 +95,10 @@ research/            experiments, capture protocol, benchmark
 paper/               LaTeX draft; tables and figures are generated, never typed
 tools/               export the backbone, calibrate the scale, print the markers
 deploy/              systemd unit for the Pi
-tests/               161 tests
+tests/               167 tests
+ios/                 the Swift till (SwiftUI, Core ML, GRDB) and its fixture-checked tests
+site/                the landing page
+build/windows/       PyInstaller spec, Inno Setup script, CI smoke test
 docs/HARDWARE.md     what to buy, how to wire it, how to calibrate it, Pi OS setup
 docs/research/       the dossier: law, market, literature, venues, architecture review
 ```
@@ -122,13 +136,14 @@ run be mistaken for a Pi run.
 pytest tests/ -v
 ```
 
-161 checks over the money and the recognition: cart arithmetic, VAT, stock
+167 checks over the money and the recognition: cart arithmetic, VAT, stock
 decrement, transaction rollback, concurrent restocks, unique sale ids, PromptPay
 checksums, gallery matching and the frozen centre, open-set rejection, fusion
 and the one-item weight rule, the HX711 bit protocol against a fake GPIO chip,
 the scale stream and zero tracking, shadow suppression, four-marker metrology,
 camera settings, restricted goods, receipts, slip verification, the dashboard
-PIN, and the full enrol-then-recognise path.
+PIN, the data-folder layout an installed build uses, the headless self-test CI runs on
+the frozen exe, and the full enrol-then-recognise path.
 
 ## Research
 

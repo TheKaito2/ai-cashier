@@ -45,7 +45,9 @@ struct EnrolView: View {
             .navigationTitle("Add a product")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save").disabled(frames.isEmpty || name.trimmingCharacters(in: .whitespaces).isEmpty).onTapGesture(perform: save) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save", action: save).disabled(frames.isEmpty || name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
             }
         }
     }

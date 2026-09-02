@@ -41,8 +41,9 @@ final class Store: ObservableObject {
         } catch {
             fatalError("AI Cashier cannot start: \(error)")
         }
-        useDemoCamera = !CameraSession.isAvailable
-        camera = useDemoCamera ? DemoCamera() : CameraSession()
+        let demo = !CameraSession.isAvailable
+        camera = demo ? DemoCamera() : CameraSession()
+        _useDemoCamera = Published(initialValue: demo)
         if let mat = Self.loadMat() { pipeline.calibrate(mat); matCalibrated = true }
         reloadProducts()
         camera.start()

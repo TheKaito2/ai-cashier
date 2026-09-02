@@ -51,6 +51,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.group3.aicashier.tests
+        GENERATE_INFOPLIST_FILE: YES
 schemes:
   AICashier:
     build:
