@@ -205,9 +205,9 @@ imports a training framework.
 nearest reference by cosine similarity. Crucially, similarities are computed
 after subtracting a centre: an ImageNet trunk is not trained to be
 contrastive, and every pair of natural images shares a large common direction.
-On our development set, two entirely different products still scored $0.81$
-before centring, leaving no room for a threshold; centring moved that to $-0.18$
-while views of one product stayed near $0.88$. The centre is the gallery mean
+On our development set, two entirely different products still scored $0.80$
+on average before centring, leaving no room for a threshold; centring moved that
+to $-0.13$ while views of one product stayed near $0.92$. The centre is the gallery mean
 \emph{frozen} once enough products are enrolled: a centre that floated with
 every enrolment would move every existing score and silently invalidate the
 threshold below. PCA-whitening fitted on held-out products~\cite{jegou2012negative}

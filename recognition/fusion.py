@@ -90,7 +90,10 @@ class FusionConfig:
     #: real photographs before the till takes anyone's money -
     #: recognition.calibration.pick_threshold does it, research/exp5_openset.py
     #: runs it and reports the curve.
-    reject_below_cosine: float = 0.38
+    #: 0.75 is where the synthetic set puts it once queries are centred like the
+    #: gallery (same product ~0.92, a stranger ~0.67, the hardest different
+    #: pair 0.90); before the Phase 6 centring fix the same placeholder was 0.38.
+    reject_below_cosine: float = 0.75
     #: if the top two are closer than this, ask the operator instead of guessing
     ambiguous_margin: float = 0.35
 

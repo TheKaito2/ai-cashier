@@ -35,6 +35,7 @@ Each item names the file, the change, the effort, and the dossier section it com
 | 24 | Camera exposure lock, MJPG, resolution honoured | `scanner/detection/camera.py`, `config/settings.json` | 09 D9 | done |
 | 25 | Dead surface removed; hardware config in the file, shop settings in the DB | `config/settings.json`, `scanner/models/product.py`, `database.py` | 09 D13 | done |
 | 26 | Fullscreen, systemd unit, Pi OS Trixie guidance | `app.py`, `deploy/ai-cashier.service`, `docs/HARDWARE.md` | 09 D16 | done |
-| 27 | Scan latency on the Pi decides whether the scan moves to a worker thread | `research/bench.py` (`scan_5_frames`) | 09 D4 | measure on the Pi |
+| 27 | Scan latency on the Pi decides whether the scan moves to a worker thread | `research/bench.py` (`scan_5_frames`) | 09 D4 | done: moved to a QThread worker after measuring 191 ms cold on the M1 |
+| 28 | Query centring fix (query normalised before the centre is subtracted); τ placeholder 0.38 → 0.75 | `recognition/gallery.py`, `recognition/fusion.py`, iOS `Gallery.swift`/`Fusion.swift` | 09 F5 | done (found by the Swift port, 3 Sep 2026) |
 
 Items 1–3 change what the project may legally claim. Items 4–7 turn a demo till into something a Thai shop could switch on. Items 8–11 are what a reviewer will ask for. Items 13–16 protect the master's/PhD path.

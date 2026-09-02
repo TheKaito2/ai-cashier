@@ -69,10 +69,11 @@ class SkuGallery:
     Matching happens on *centred* vectors.  An ImageNet trunk was never trained
     to make its features contrastive, so every pair of natural images already
     points in roughly the same direction: measured on the synthetic set, two
-    completely different products still scored 0.81 cosine, which leaves no
-    room for a rejection threshold.  Subtracting the gallery mean removes that
-    shared component and drops the same figure to -0.18, while views of one
-    product stay near 0.88.
+    completely different products still score 0.80 cosine on average (0.98 at
+    worst), which leaves no room for a rejection threshold.  Subtracting the
+    gallery mean removes that shared component and drops the average to -0.13,
+    while views of one product stay near 0.92 (re-measured 3 Sep 2026, after
+    the query-centring fix described under `project`).
 
     The centre can be **frozen**.  While it floats with the gallery mean, every
     enrolment moves every existing score, and a rejection threshold calibrated
@@ -160,8 +161,17 @@ class SkuGallery:
         return self._centred
 
     def project(self, vector: np.ndarray) -> np.ndarray:
-        """Put a query into the same centred space as the gallery."""
-        return l2_normalise(np.asarray(vector, dtype=np.float32) - self.reference())[0]
+        """Put a query into the same centred space as the gallery.
+
+        The query is unit-normalised *before* the centre is subtracted, exactly
+        as the stored views were.  Until the Swift port reproduced this code
+        (Phase 6), the raw query - norm in the tens - had the unit-length centre
+        subtracted from it, which left the query effectively uncentred while
+        the gallery rows were centred; known products scored ~0.39 and a
+        stranger ~0.27 against a threshold of 0.38.  Centred properly the same
+        queries score ~0.93 and ~0.64.
+        """
+        return l2_normalise(l2_normalise(vector) - self.reference())[0]
 
     def match(self, vector: np.ndarray, top_k: int = 3) -> list[Match]:
         """Rank SKUs by their best-matching reference view."""

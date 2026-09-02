@@ -17,7 +17,13 @@ final class CoreMLEmbedder {
             throw Error.modelMissing
         }
         let config = MLModelConfiguration()
+        #if targetEnvironment(simulator)
+        // the Simulator's Neural Engine/GPU path returned all-zero vectors for
+        // this model; the CPU path is what the tests compare against Python
+        config.computeUnits = .cpuOnly
+        #else
         config.computeUnits = .all
+        #endif
         let ml = try MLModel(contentsOf: url, configuration: config)
         model = try VNCoreMLModel(for: ml)
         dim = 576
