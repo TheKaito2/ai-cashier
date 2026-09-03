@@ -1,4 +1,5 @@
-// Theme management
+// Light or dark, remembered in the shop settings and in this browser, and
+// broadcast to the other open tabs.
 class ThemeManager {
     constructor() {
         this.currentTheme = 'light';
@@ -7,27 +8,22 @@ class ThemeManager {
 
     init() {
         this.loadTheme();
-        
         window.addEventListener('storage', (e) => {
-            if (e.key === 'theme') {
-                this.setTheme(e.newValue, false);
-            }
+            if (e.key === 'theme') this.setTheme(e.newValue, false);
         });
     }
 
     async loadTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        
-        if (savedTheme) {
-            this.setTheme(savedTheme, false);
-        } else {
-            try {
-                const response = await fetch('/api/theme');
-                const data = await response.json();
-                this.setTheme(data.theme, false);
-            } catch (error) {
-                console.error('Error loading theme:', error);
-            }
+        const saved = localStorage.getItem('theme');
+        if (saved) {
+            this.setTheme(saved, false);
+            return;
+        }
+        try {
+            const data = await fetch('/api/theme').then(r => r.json());
+            this.setTheme(data.theme, false);
+        } catch (error) {
+            console.error('Error loading theme:', error);
         }
     }
 
@@ -35,12 +31,9 @@ class ThemeManager {
         this.currentTheme = theme;
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
-
-        const toggleSlider = document.querySelector('.theme-toggle-slider');
-        if (toggleSlider) {
-            toggleSlider.innerHTML = theme === 'dark' ? '🌙' : '☀️';
-        }
-
+        document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+            btn.textContent = theme === 'dark' ? 'Light' : 'Dark';
+        });
         if (broadcast) {
             fetch('/api/theme', {
                 method: 'POST',
@@ -51,24 +44,15 @@ class ThemeManager {
     }
 
     toggle() {
-        const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
-        this.setTheme(newTheme);
+        this.setTheme(this.currentTheme === 'light' ? 'dark' : 'light');
     }
 }
 
 const themeManager = new ThemeManager();
 
 document.addEventListener('DOMContentLoaded', () => {
-    const createThemeToggle = () => {
-        const toggle = document.createElement('button');
-        toggle.className = 'theme-toggle';
-        toggle.onclick = () => themeManager.toggle();
-        toggle.innerHTML = '<div class="theme-toggle-slider">☀️</div>';
-        return toggle;
-    };
-
-    const headerNav = document.querySelector('.header-nav');
-    if (headerNav && !document.querySelector('.theme-toggle')) {
-        headerNav.appendChild(createThemeToggle());
-    }
+    document.querySelectorAll('[data-theme-toggle]').forEach(btn => {
+        btn.onclick = () => themeManager.toggle();
+        btn.textContent = themeManager.currentTheme === 'dark' ? 'Light' : 'Dark';
+    });
 });

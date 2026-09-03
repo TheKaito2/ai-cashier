@@ -1,5 +1,7 @@
 """Every page the navigation points at must exist, and must not need the internet."""
 import pathlib
+import re
+
 import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -29,3 +31,18 @@ def test_no_page_loads_anything_from_the_internet():
 
 def test_trained_weights_are_not_served_over_http(client):
     assert client.get("/models/chips_model.pt").status_code == 404
+
+
+@pytest.mark.parametrize("path", PAGES)
+def test_every_static_asset_a_page_names_resolves(client, path):
+    """A stylesheet, script or font that 404s leaves the page in fallback fonts
+    with no styling and no charts - silently.  So every URL is fetched."""
+    html = client.get(path).text
+    urls = set(re.findall(r'(?:href|src)="(/static/[^"]+)"', html))
+    assert urls, f"{path} names no static assets"
+    for url in urls:
+        assert client.get(url).status_code == 200, url
+        if url.endswith(".css"):
+            css = client.get(url).text
+            for font in set(re.findall(r"url\((/static/fonts/[^)]+)\)", css)):
+                assert client.get(font).status_code == 200, font

@@ -1,38 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Monitor - Smart Checkout</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="stylesheet" href="/static/css/icons.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor - AI Cashier</title>
+<link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="app-container">
-        <header class="app-header">
-            <div class="header-content">
-                <h1>System Monitor</h1>
-                <nav class="header-nav">
-                    <button class="nav-btn" onclick="window.location.href='/'">
-                        <i class="fas fa-home"></i> Home
-                    </button>
-                </nav>
-            </div>
-        </header>
-        <main class="main-content">
-            <div id="systemStatus">Loading...</div>
-        </main>
-    </div>
-    <script>
-        async function updateStatus() {
-            const response = await fetch('/api/system-status');
-            const data = await response.json();
-            document.getElementById('systemStatus').innerHTML = `
-                <pre>${JSON.stringify(data, null, 2)}</pre>
-            `;
-        }
-        setInterval(updateStatus, 5000);
-        updateStatus();
-    </script>
+<div class="page"><div class="page__inner">
+
+  <header data-mast></header>
+
+  <div class="title">
+    <p class="title__eyebrow">Rig</p>
+    <h1>Monitor</h1>
+    <p>Whether the till process is up, what it last sold, and what it refused to name. Refreshes every five seconds; useful during a demo.</p>
+  </div>
+
+  <section class="tiles" aria-label="Status">
+    <div class="tile" id="tTill"><div class="tile__k">Till</div><div class="tile__v">checking</div><div class="tile__d">&nbsp;</div></div>
+    <div class="tile" id="tMode"><div class="tile__k">Network</div><div class="tile__v">–</div><div class="tile__d">&nbsp;</div></div>
+    <div class="tile" id="tProducts"><div class="tile__k">Products</div><div class="tile__v">–</div><div class="tile__d">&nbsp;</div></div>
+    <div class="tile" id="tSale"><div class="tile__k">Last sale</div><div class="tile__v">–</div><div class="tile__d">&nbsp;</div></div>
+    <div class="tile" id="tAbstain"><div class="tile__k">Last refusal</div><div class="tile__v">–</div><div class="tile__d">&nbsp;</div></div>
+    <div class="tile" id="tEnrol"><div class="tile__k">Taught</div><div class="tile__v">–</div><div class="tile__d">&nbsp;</div></div>
+  </section>
+
+  <div class="grid-2">
+    <section class="panel" aria-labelledby="kinds">
+      <div class="panel__head"><h2 id="kinds">Events by kind</h2><span class="panel__note">last 200</span></div>
+      <div id="kindsChart" data-label="Events by kind"></div>
+    </section>
+    <section class="panel" aria-labelledby="abst">
+      <div class="panel__head"><h2 id="abst">Refusals by day</h2><span class="panel__note">unknown or ambiguous items</span></div>
+      <div id="abstainChart" data-label="Refusals by day"></div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="log">
+    <div class="panel__head"><h2 id="log">Event log</h2><span class="panel__note">newest first</span></div>
+    <div id="events"></div>
+  </section>
+
+</div></div>
+
+<script src="/static/js/mast.js"></script>
+<script src="/static/js/theme.js"></script>
+<script src="/static/js/charts.js"></script>
+<script src="/static/js/monitor.js"></script>
 </body>
 </html>
