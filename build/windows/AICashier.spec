@@ -22,6 +22,7 @@ datas = [
     (str(ROOT / "docs" / "assets" / "demo_frame.jpg"), "docs/assets"),
     (str(ROOT / "docs" / "assets" / "demo_mat.png"), "docs/assets"),
     (str(ROOT / "server" / "static"), "server/static"),
+    (str(ROOT / "assets" / "fonts"), "assets/fonts"),
     (str(ROOT / "VERSION"), "."),
 ]
 binaries, hiddenimports = [], []

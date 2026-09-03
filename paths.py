@@ -106,5 +106,6 @@ def log_dir() -> Path:
 
 EMBEDDER = RESOURCES / "models" / "mobilenet_v3_small.onnx"
 STATIC = RESOURCES / "server" / "static"
+FONTS = RESOURCES / "assets" / "fonts"          # IBM Plex Sans Thai + Plex Mono (OFL)
 DEMO_FRAME = RESOURCES / "docs" / "assets" / "demo_frame.jpg"
 DEMO_MAT = RESOURCES / "docs" / "assets" / "demo_mat.png"

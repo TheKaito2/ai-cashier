@@ -19,8 +19,8 @@ from dataclasses import replace
 from datetime import datetime
 
 import cv2
-from PySide6.QtCore import QObject, Qt, QThread, QTimer, Signal
-from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtCore import QObject, QPoint, Qt, QThread, QTimer, Signal
+from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QPixmap, QPolygon
 from PySide6.QtWidgets import (
     QDialog, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox,
     QPushButton, QScrollArea, QSizePolicy, QVBoxLayout, QWidget,
@@ -56,6 +56,23 @@ def _label(text, obj_name=None, wrap=False):
         lab.setObjectName(obj_name)
     lab.setWordWrap(wrap)
     return lab
+
+
+def _clear_layout(layout):
+    while layout.count():
+        item = layout.takeAt(0)
+        w = item.widget()
+        if w is not None:
+            # unparent now: deleteLater alone leaves the old widget painted
+            # over the new list until the event loop gets round to it
+            w.setParent(None)
+            w.deleteLater()
+
+
+def _repolish(widget):
+    """Re-read the stylesheet after a dynamic property changed."""
+    widget.style().unpolish(widget)
+    widget.style().polish(widget)
 
 
 def _card(title=None):
@@ -140,46 +157,177 @@ class DetectedChip(QFrame):
         lay.addWidget(drop)
 
 
-class CartRow(QFrame):
-    """One line of the cart, with quantity steppers big enough for a finger."""
+class TornEdge(QWidget):
+    """The bottom of the receipt, the way the printer's tear bar leaves it."""
+
+    def __init__(self, colour: str, tooth: int = 7, height: int = 9):
+        super().__init__()
+        self.colour, self.tooth = QColor(colour), tooth
+        self.setFixedHeight(height)
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        w, h = self.width(), self.height()
+        points, x, down = [QPoint(0, 0)], 0, True
+        while x < w:
+            x = min(x + self.tooth, w)
+            points.append(QPoint(x, h if down else 0))
+            down = not down
+        points.append(QPoint(w, 0))
+        p.setPen(Qt.NoPen)
+        p.setBrush(self.colour)
+        p.drawPolygon(QPolygon(points))
+        p.end()
+
+
+class ReceiptLine(QWidget):
+    """One item as the printer sets it: the name, then quantity x price and the total,
+    with steppers big enough for a finger."""
 
     changed = Signal(str, int)   # product_id, new quantity
 
     def __init__(self, item):
         super().__init__()
-        self.item = item
-        lay = QVBoxLayout(self)
-        lay.setContentsMargins(0, 10, 0, 10)
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(0, 5, 0, 5)
         lay.setSpacing(8)
-
-        top = QHBoxLayout()
-        top.setSpacing(10)
         text = QVBoxLayout()
-        text.setSpacing(2)
-        text.addWidget(_label(item.product.name, "rowName", wrap=True))
-        text.addWidget(_label(f"{BAHT}{item.product.price:.2f} each", "rowMeta"))
-        top.addLayout(text, 1)
-        top.addWidget(_label(f"{BAHT}{item.subtotal:.2f}", "rowTotal"))
-        lay.addLayout(top)
-
-        steps = QHBoxLayout()
-        steps.setSpacing(8)
+        text.setSpacing(0)
+        text.addWidget(_label(item.product.name, "rcp", wrap=True))
+        money = QHBoxLayout()
+        money.addWidget(_label(f"  {item.quantity} x {item.product.price:.2f}", "rcpMuted"))
+        money.addStretch(1)
+        money.addWidget(_label(f"{item.subtotal:.2f}", "rcp"))
+        text.addLayout(money)
+        lay.addLayout(text, 1)
         for glyph, delta in (("−", -1), ("+", +1)):
             b = QPushButton(glyph)
-            b.setObjectName("step")
+            b.setObjectName("rcpStep")
             b.setCursor(Qt.PointingHandCursor)
             b.clicked.connect(
                 lambda _, d=delta: self.changed.emit(item.product.id, max(0, item.quantity + d))
             )
-            steps.addWidget(b)
-        steps.addWidget(_label(f"× {item.quantity}", "rowMeta"))
-        steps.addStretch(1)
-        lay.addLayout(steps)
+            lay.addWidget(b)
 
+
+class ReceiptStrip(QFrame):
+    """The cart, set the way the receipt will print: paper on the panel, mono,
+    a torn edge.  What the customer sees on screen is what they will hold."""
+
+    quantity_changed = Signal(str, int)
+
+    def __init__(self, settings: dict, tax_rate: float):
+        super().__init__()
+        self.setObjectName("receipt")
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+        body = QFrame()
+        body.setObjectName("receiptBody")
+        lay = QVBoxLayout(body)
+        lay.setContentsMargins(18, 16, 18, 10)
+        lay.setSpacing(3)
+        outer.addWidget(body, 1)
+        outer.addWidget(TornEdge(theme.TOKENS["paper"]))
+
+        vat = bool(settings.get("vat_registered"))
+        for text, name in ((settings.get("store_name", "Store").upper(), "rcp"),
+                           ("TAX INVOICE (ABB)" if vat else "ใบเสร็จรับเงิน / RECEIPT", "rcpMuted")):
+            lab = _label(text, name)
+            lab.setAlignment(Qt.AlignCenter)
+            lay.addWidget(lab)
+        self.when = _label("", "rcpMuted")
+        self.when.setAlignment(Qt.AlignCenter)
+        lay.addWidget(self.when)
+        lay.addWidget(self._rule())
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        host = QWidget()
+        self.lines = QVBoxLayout(host)
+        self.lines.setContentsMargins(0, 4, 0, 4)
+        self.lines.setSpacing(0)
+        scroll.setWidget(host)
+        lay.addWidget(scroll, 1)
+        lay.addWidget(self._rule())
+
+        self.sub_val, self.tax_val = _label("", "rcp"), _label("", "rcp")
+        for name, widget in (("Subtotal", self.sub_val),
+                             (f"VAT {tax_rate * 100:.0f}%", self.tax_val)):
+            row = QHBoxLayout()
+            row.addWidget(_label(name, "rcpMuted"))
+            row.addStretch(1)
+            row.addWidget(widget)
+            lay.addLayout(row)
+        total = QHBoxLayout()
+        total.addWidget(_label("TOTAL", "rcp"))
+        total.addStretch(1)
+        self.total_val = _label("", "rcpTotal")
+        total.addWidget(self.total_val)
+        lay.addLayout(total)
+        thanks = _label("ขอบคุณค่ะ / THANK YOU", "rcpMuted")
+        thanks.setAlignment(Qt.AlignCenter)
+        lay.addWidget(thanks)
+
+    @staticmethod
+    def _rule():
         rule = QFrame()
-        rule.setObjectName("rowLine")
+        rule.setObjectName("rcpRule")
         rule.setFixedHeight(1)
-        lay.addWidget(rule)
+        return rule
+
+    def set_cart(self, items, summary: dict) -> None:
+        _clear_layout(self.lines)
+        if not items:
+            note = _label("NOTHING SCANNED YET", "rcpMuted")
+            note.setAlignment(Qt.AlignCenter)
+            self.lines.addWidget(note)
+        for item in items:
+            line = ReceiptLine(item)
+            line.changed.connect(self.quantity_changed)
+            self.lines.addWidget(line)
+        self.lines.addStretch(1)
+        n = summary["item_count"]
+        self.when.setText(f"{datetime.now():%d/%m/%Y %H:%M}   {n} item{'' if n == 1 else 's'}")
+        self.sub_val.setText(f"{summary['subtotal']:,.2f}")
+        self.tax_val.setText(f"{summary['tax']:,.2f}")
+        self.total_val.setText(f"{BAHT}{summary['total']:,.2f}")
+
+
+class ReceiptDialog(QDialog):
+    """What the printer prints, shown once the money has been confirmed."""
+
+    def __init__(self, text: str, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Paid")
+        self.setStyleSheet(theme.QSS)
+        self.setMinimumWidth(420)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(28, 28, 28, 24)
+        lay.setSpacing(16)
+        lay.addWidget(_label("PAID", "cardTitle"))
+
+        strip = QFrame()
+        strip.setObjectName("receipt")
+        outer = QVBoxLayout(strip)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+        body = QFrame()
+        body.setObjectName("receiptBody")
+        inner = QVBoxLayout(body)
+        inner.setContentsMargins(22, 18, 22, 14)
+        printed = _label(text, "rcp")
+        printed.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        inner.addWidget(printed)
+        outer.addWidget(body)
+        outer.addWidget(TornEdge(theme.TOKENS["paper"]))
+        lay.addWidget(strip)
+
+        done = QPushButton("Done")
+        done.setObjectName("pay")
+        done.clicked.connect(self.accept)
+        lay.addWidget(done)
 
 
 class PaymentDialog(QDialog):
@@ -273,6 +421,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, scale=None, dashboard_url="http://127.0.0.1:8000"):
         super().__init__()
+        theme.load_fonts()
         with open(paths.settings_path(), encoding="utf-8") as f:
             self.settings = json.load(f)
 
@@ -280,6 +429,8 @@ class MainWindow(QMainWindow):
         self.db = Database()
         self.cart = ShoppingCart(tax_rate=self.db.get_settings().get("tax_rate", 0.07))
         self.detected: list[RecognisedItem] = []
+        #: (box, colour token, label) per detected item, painted on the frame
+        self._overlay: list[tuple] = []
         self.pending_payment = None
         self._scan_thread: QThread | None = None
         self._scan_worker: ScanWorker | None = None
@@ -423,16 +574,27 @@ class MainWindow(QMainWindow):
 
     def _camera_column(self):
         col = QVBoxLayout()
-        col.setSpacing(18)
+        col.setSpacing(14)
 
-        cam_card, cam_lay = _card("camera")
+        # the camera is the hero: no card around it, the frame is the surface
         self.view = QLabel()
         self.view.setObjectName("viewfinder")
         self.view.setAlignment(Qt.AlignCenter)
-        self.view.setMinimumHeight(360)
-        self.view.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        cam_lay.addWidget(self.view, 1)
-        col.addWidget(cam_card, 1)
+        self.view.setMinimumHeight(320)
+        # Ignored, not Expanding: a QLabel otherwise refuses to shrink below the
+        # pixmap it was last given, and the frame grows over the widgets under it
+        self.view.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
+        col.addWidget(self.view, 1)
+
+        # instrument readouts, under the frame
+        rail = QHBoxLayout()
+        rail.setContentsMargins(4, 0, 4, 0)
+        self.stats = _label("", "readout")
+        rail.addWidget(self.stats)
+        rail.addStretch(1)
+        self.pan_readout = _label("", "readout")
+        rail.addWidget(self.pan_readout)
+        col.addLayout(rail)
 
         det_card, det_lay = _card("just detected")
         self.detected_box = QVBoxLayout()
@@ -460,54 +622,27 @@ class MainWindow(QMainWindow):
         return wrap
 
     def _cart_column(self):
-        card, lay = _card()
-        head = QHBoxLayout()
-        head.addWidget(_label("CART", "cardTitle"))
-        head.addStretch(1)
-        self.cart_count = _label("", "rowMeta")
-        head.addWidget(self.cart_count)
-        lay.addLayout(head)
-
-        self.cart_scroll = QScrollArea()
-        self.cart_scroll.setWidgetResizable(True)
-        self.cart_host = QWidget()
-        self.cart_box = QVBoxLayout(self.cart_host)
-        self.cart_box.setContentsMargins(0, 0, 8, 0)
-        self.cart_box.setSpacing(0)
-        self.cart_box.addStretch(1)
-        self.cart_scroll.setWidget(self.cart_host)
-        lay.addWidget(self.cart_scroll, 1)
-
-        self.sub_val = _label("", "sumValue")
-        self.tax_val = _label("", "sumValue")
-        for name, widget in (("Subtotal", self.sub_val),
-                             (f"VAT {self.cart.tax_rate * 100:.0f}%", self.tax_val)):
-            row = QHBoxLayout()
-            row.addWidget(_label(name, "sumLabel"))
-            row.addStretch(1)
-            row.addWidget(widget)
-            lay.addLayout(row)
-
-        total = QHBoxLayout()
-        total.addWidget(_label("TOTAL", "totLabel"))
-        total.addStretch(1)
-        self.total_val = _label("", "totValue")
-        total.addWidget(self.total_val)
-        lay.addLayout(total)
+        col = QVBoxLayout()
+        col.setSpacing(14)
+        self.receipt = ReceiptStrip(self.db.get_settings(), self.cart.tax_rate)
+        self.receipt.quantity_changed.connect(self.on_quantity_changed)
+        col.addWidget(self.receipt, 1)
 
         self.pay_btn = QPushButton("PAY")
         self.pay_btn.setObjectName("pay")
         self.pay_btn.setCursor(Qt.PointingHandCursor)
         self.pay_btn.clicked.connect(self.on_checkout)
-        lay.addWidget(self.pay_btn)
+        col.addWidget(self.pay_btn)
 
         self.clear_btn = QPushButton("Clear cart")
         self.clear_btn.setObjectName("ghostDanger")
         self.clear_btn.clicked.connect(self.on_clear_cart)
-        lay.addWidget(self.clear_btn)
+        col.addWidget(self.clear_btn)
 
-        card.setMinimumWidth(420)
-        return card
+        wrap = QWidget()
+        wrap.setLayout(col)
+        wrap.setMinimumWidth(440)
+        return wrap
 
     def _status_bar(self):
         bar = QFrame()
@@ -518,21 +653,31 @@ class MainWindow(QMainWindow):
         self.status = _label("Ready")
         lay.addWidget(self.status)
         lay.addStretch(1)
-        self.stats = _label("")
-        lay.addWidget(self.stats)
         self._refresh_stats()
         return bar
 
     def _refresh_stats(self) -> None:
         gallery = self.pipeline.gallery
-        mat = "mat calibrated" if self.pipeline.proposer.calibrated else "MAT NOT CALIBRATED"
-        self.stats.setText(f"{len(gallery.skus)} products enrolled  ·  "
-                           f"{len(gallery)} reference views  ·  {mat}")
+        calibrated = self.pipeline.proposer.calibrated
+        self.stats.setText(f"GALLERY {len(gallery.skus)} products · {len(gallery)} views     "
+                           f"MAT {'calibrated' if calibrated else 'NOT CALIBRATED'}")
+        self.stats.setProperty("state", "ok" if calibrated else "bad")
+        _repolish(self.stats)
+
+    def _set_view_state(self, state: str) -> None:
+        """The viewfinder's border is the till's state: scanning, unknown, ready."""
+        self.view.setProperty("state", state)
+        _repolish(self.view)
 
     # ----------------------------------------------------------------- render
 
     def _tick(self):
         self.clock.setText(datetime.now().strftime("%H:%M:%S"))
+        if self.scale is None:
+            self.pan_readout.setText("SCALE none")
+        else:
+            grams = self.scale.read_stable_grams()
+            self.pan_readout.setText(f"PAN {grams:.0f} g" if grams is not None else "PAN settling")
 
     def _draw_frame(self):
         ok, frame = self.video.read()
@@ -541,19 +686,34 @@ class MainWindow(QMainWindow):
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, _ = rgb.shape
         img = QImage(rgb.data, w, h, 3 * w, QImage.Format_RGB888)
-        self.view.setPixmap(QPixmap.fromImage(img).scaled(
-            self.view.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        pix = QPixmap.fromImage(img).scaled(
+            self.view.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        if self._overlay:
+            self._paint_overlay(pix, pix.width() / w)
+        self.view.setPixmap(pix)
 
-    @staticmethod
-    def _clear(layout):
-        while layout.count():
-            item = layout.takeAt(0)
-            w = item.widget()
-            if w is not None:
-                # unparent now: deleteLater alone leaves the old widget painted
-                # over the new list until the event loop gets round to it
-                w.setParent(None)
-                w.deleteLater()
+    def _paint_overlay(self, pix: QPixmap, scale: float) -> None:
+        """Boxes and labels drawn on the frame itself, so the customer sees which
+        object was priced as what."""
+        p = QPainter(pix)
+        p.setRenderHint(QPainter.Antialiasing)
+        font = QFont("IBM Plex Mono")
+        font.setPixelSize(13)
+        font.setWeight(QFont.DemiBold)
+        p.setFont(font)
+        fm = p.fontMetrics()
+        for box, colour_key, text in self._overlay:
+            x1, y1, x2, y2 = (int(round(v * scale)) for v in box)
+            colour = QColor(theme.TOKENS[colour_key])
+            p.setPen(QPen(colour, 3))
+            p.setBrush(Qt.NoBrush)
+            p.drawRect(x1, y1, x2 - x1, y2 - y1)
+            tw, th = fm.horizontalAdvance(text) + 16, fm.height() + 8
+            ty = y1 - th if y1 >= th else y2
+            p.fillRect(x1 - 1, ty, tw, th, colour)
+            p.setPen(QColor(theme.TOKENS["on_accent"]))
+            p.drawText(x1 + 7, ty + 4 + fm.ascent(), text)
+        p.end()
 
     def _product_for(self, item: RecognisedItem) -> Product | None:
         """The priced product behind a recognised sku, if the database has one."""
@@ -611,7 +771,16 @@ class MainWindow(QMainWindow):
         return ok
 
     def _refresh_detected(self):
-        self._clear(self.detected_box)
+        _clear_layout(self.detected_box)
+        self._overlay = []
+        for item in self.detected:
+            product = self._product_for(item)
+            if item.status is Status.UNKNOWN or product is None:
+                self._overlay.append((item.box, "accent", "UNKNOWN · ENROL"))
+            elif item.status is Status.AMBIGUOUS:
+                self._overlay.append((item.box, "info", f"{product.name} ?"))
+            else:
+                self._overlay.append((item.box, "ok", f"{product.name}  {BAHT}{product.price:.0f}"))
         if not self.detected:
             self.detected_box.addWidget(
                 _label("Place products under the camera, then press SCAN.", "emptyNote"))
@@ -629,28 +798,16 @@ class MainWindow(QMainWindow):
         self.add_btn.setText("Add to cart" if n <= 1 else f"Add {n} to cart")
         if unknown:
             self._set_status(f"{unknown} item(s) not recognised - enrol them or remove them")
+        ambiguous = any(i.status is Status.AMBIGUOUS for i in self.detected)
+        self._set_view_state("" if not self.detected else
+                             "unknown" if unknown else "ambiguous" if ambiguous else "ready")
 
     def _refresh_cart(self):
-        self._clear(self.cart_box)
         items = self.cart.get_items()
-        if not items:
-            self.cart_box.addStretch(1)
-            note = _label("Nothing scanned yet.", "emptyNote")
-            note.setAlignment(Qt.AlignCenter)
-            self.cart_box.addWidget(note)
-        else:
-            for item in items:
-                row = CartRow(item)
-                row.changed.connect(self.on_quantity_changed)
-                self.cart_box.addWidget(row)
-        self.cart_box.addStretch(1)
-
         s = self.cart.get_summary()
-        self.cart_count.setText(f"{s['item_count']} item{'' if s['item_count'] == 1 else 's'}")
-        self.sub_val.setText(f"{BAHT}{s['subtotal']:,.2f}")
-        self.tax_val.setText(f"{BAHT}{s['tax']:,.2f}")
-        self.total_val.setText(f"{BAHT}{s['total']:,.2f}")
+        self.receipt.set_cart(items, s)
         self.pay_btn.setEnabled(bool(items))
+        self.pay_btn.setText(f"PAY  {BAHT}{s['total']:,.2f}" if items else "PAY")
         self.clear_btn.setEnabled(bool(items))
 
     def _set_status(self, text):
@@ -689,6 +846,7 @@ class MainWindow(QMainWindow):
         self.scan_btn.setEnabled(False)
         self.add_btn.setEnabled(False)
         self._set_status("Scanning...")
+        self._set_view_state("scanning")
         self._scan_thread = QThread(self)
         self._scan_worker = ScanWorker(self.pipeline, self.video, self.scale,
                                        self._pan_baseline_g, self.SCAN_FRAMES)
@@ -705,6 +863,7 @@ class MainWindow(QMainWindow):
         self.scan_btn.setEnabled(True)
         if error:
             self._set_status(error)
+            self._set_view_state("")
             return
 
         self.detected = items
@@ -932,7 +1091,7 @@ class MainWindow(QMainWindow):
             self._set_status("Payment cancelled - nothing was charged")
             return
         try:
-            confirm_payment(self.db, payment["payment_id"])
+            sale = confirm_payment(self.db, payment["payment_id"])
         except CheckoutError as e:
             # e.g. a slip verifier is configured and no slip was checked
             self._warn("Payment not confirmed", e.payload.get("error", "unknown error"))
@@ -941,6 +1100,7 @@ class MainWindow(QMainWindow):
         self._new_basket()
         self._refresh_cart()
         self._set_status(f"Paid {BAHT}{payment['total']:,.2f} - stock updated")
+        ReceiptDialog(sale["receipt"], self).exec()
 
     def _warn(self, title, detail):
         box = QMessageBox(self)
