@@ -40,7 +40,7 @@ class InventoryManager {
 
             document.getElementById('totalProducts').textContent = this.products.length;
             document.getElementById('lowStockCount').textContent = analytics.low_stock_count;
-            document.getElementById('todayRevenue').textContent = `฿${analytics.today_revenue.toFixed(2)}`;
+            document.getElementById('todayRevenue').textContent = '฿' + Charts.fmt(analytics.today_revenue);
 
             this.renderProducts();
         } catch (error) {
@@ -67,44 +67,43 @@ class InventoryManager {
         tbody.innerHTML = filteredProducts.map(product => `
             <tr>
                 <td>
-                    <div class="prod">
-                        <div class="prod__dot" aria-hidden="true">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
-                        </div>
-                        <div>
-                            <div class="prod__name">${product.name}</div>
-                            <div class="prod__meta">${product.size || product.id}</div>
-                        </div>
-                    </div>
+                    <div class="prod__name">${product.name}</div>
+                    <div class="prod__meta">${product.size || product.id}</div>
                 </td>
                 <td>${product.category}${product.restricted && product.restricted !== 'none'
-                    ? ` <span class="status-badge status-low" title="Alcohol: 11:00-24:00, staff ID check. Tobacco: staff-only, never displayed.">${product.restricted}</span>` : ''}</td>
+                    ? ` <span class="chip chip--warn" title="Alcohol: 11:00-24:00, staff ID check. Tobacco: staff-only, never displayed.">${product.restricted}</span>` : ''}</td>
                 <td class="num">฿${product.price.toFixed(2)}</td>
                 <td class="num">${product.stock} <span class="prod__meta">/ min ${product.min_stock}</span></td>
-                <td>
-                    <span class="status-badge ${this.getStatusClass(product)}">
-                        ${this.getStatusText(product)}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-secondary" onclick="inventoryManager.showRestockModal('${product.id}')">
-                        + Restock
-                    </button>
+                <td><span class="chip ${this.getStatusClass(product)}">${this.getStatusText(product)}</span></td>
+                <td class="num">
+                    <button class="btn btn-secondary" onclick="inventoryManager.showRestockModal('${product.id}')">+ Restock</button>
                 </td>
             </tr>
         `).join('');
+        this.renderCover();
+    }
+
+    // stock against its minimum, the products nearest to running out first
+    renderCover() {
+        const rows = [...this.products]
+            .sort((a, b) => (a.stock / Math.max(a.min_stock, 1)) - (b.stock / Math.max(b.min_stock, 1)))
+            .slice(0, 10)
+            .map(p => ({ label: p.name, value: p.stock, valueText: `${p.stock} / ${p.min_stock}`,
+                         cls: p.stock === 0 ? 'bar--bad' : p.stock <= p.min_stock ? 'bar--warn' : '' }));
+        Charts.bars(document.getElementById('coverChart'), rows,
+                    { max: Math.max(...this.products.map(p => p.stock), 1) });
     }
 
     getStatusClass(product) {
-        if (product.stock === 0) return 'status-out';
-        if (product.stock <= product.min_stock) return 'status-low';
-        return 'status-good';
+        if (product.stock === 0) return 'chip--bad';
+        if (product.stock <= product.min_stock) return 'chip--warn';
+        return 'chip--ok';
     }
 
     getStatusText(product) {
-        if (product.stock === 0) return 'Out of Stock';
-        if (product.stock <= product.min_stock) return 'Low Stock';
-        return 'In Stock';
+        if (product.stock === 0) return 'Out';
+        if (product.stock <= product.min_stock) return 'Low';
+        return 'In stock';
     }
 
     showRestockModal(productId) {

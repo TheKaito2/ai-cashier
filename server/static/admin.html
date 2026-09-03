@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Analytics - AI Cashier</title>
 <link rel="stylesheet" href="/static/css/style.css">
-<link rel="stylesheet" href="/static/css/landing.css">
-<link rel="stylesheet" href="/static/css/dash.css">
 </head>
 <body>
 <div class="page"><div class="page__inner">
@@ -16,7 +14,7 @@
   <div class="title">
     <p class="title__eyebrow">Business</p>
     <h1>Analytics</h1>
-    <p>Every confirmed sale, priced from the same product file the till uses. Figures refresh every 30 seconds.</p>
+    <p>Every confirmed sale, priced from the same product records the till uses. Figures refresh every 30 seconds.</p>
   </div>
 
   <section class="figures" aria-label="Takings">
@@ -29,15 +27,26 @@
     <div class="figure"><div class="figure__n" id="avgOrder">฿0</div><div class="figure__k">average basket</div></div>
   </section>
 
+  <div class="grid-2">
+    <section class="panel" aria-labelledby="byday">
+      <div class="panel__head"><h2 id="byday">Takings by day</h2><span class="panel__note">last 14 days</span></div>
+      <div id="dayChart" data-label="Takings by day"></div>
+    </section>
+    <section class="panel" aria-labelledby="byhour">
+      <div class="panel__head"><h2 id="byhour">Sales by hour</h2><span class="panel__note">all recorded sales</span></div>
+      <div id="hourChart" data-label="Sales by hour of day"></div>
+    </section>
+  </div>
+
   <div class="split">
     <section class="panel" aria-labelledby="bs">
       <div class="panel__head"><h2 id="bs">Best sellers</h2><span class="panel__note">by revenue</span></div>
-      <div id="bestSellersRanking" class="best-sellers-list"></div>
+      <div id="bestSellersRanking" data-label="Best sellers by revenue"></div>
     </section>
 
     <section class="panel" aria-labelledby="rt">
-      <div class="panel__head"><h2 id="rt">Recent transactions</h2><span class="panel__note">last 10</span></div>
-      <div id="recentTransactions" style="max-height:420px;overflow-y:auto"></div>
+      <div class="panel__head"><h2 id="rt">Recent sales</h2><span class="panel__note">last 10</span></div>
+      <div id="recentTransactions"></div>
     </section>
   </div>
 
@@ -45,6 +54,7 @@
 
 <script src="/static/js/mast.js"></script>
 <script src="/static/js/theme.js"></script>
+<script src="/static/js/charts.js"></script>
 <script src="/static/js/admin.js"></script>
 </body>
 </html>

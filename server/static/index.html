@@ -6,26 +6,16 @@
 <title>AI Cashier - Group 3</title>
 <meta name="description" content="A camera-based self-checkout till built by Group 3, Assumption College Sriracha.">
 <link rel="stylesheet" href="/static/css/style.css">
-<link rel="stylesheet" href="/static/css/landing.css">
 </head>
 <body>
-<div class="landing">
-<div class="landing__inner">
+<div class="landing"><div class="landing__inner">
 
-  <header class="mast">
-    <span class="mast__dot" aria-hidden="true"></span>
-    <span class="mast__name">AI Cashier</span>
-    <span class="mast__where">Group 3 &middot; Assumption College Sriracha</span>
-    <nav class="mast__nav header-nav" aria-label="Main">
-      <a href="/inventory">Inventory</a>
-      <a href="/admin">Analytics</a>
-    </nav>
-  </header>
+  <header data-mast></header>
 
   <section class="hero" aria-labelledby="hero-heading">
     <div class="hero__grid">
       <div>
-        <p class="hero__eyebrow">Engineering Design &amp; Innovation</p>
+        <p class="hero__eyebrow eyebrow">Engineering Design &amp; Innovation</p>
         <h1 id="hero-heading">Checkout that<br>reads the shelf,<br><em>not the barcode.</em></h1>
         <p class="hero__lede">
           A camera looks at what the customer put down, the till matches each item
@@ -35,15 +25,20 @@
         </p>
       </div>
 
-      <aside class="till" aria-label="Till status">
-        <div class="till__row">
-          <span class="till__k">Till</span>
-          <span class="till__state" id="tillState"><span class="till__beacon"></span>checking</span>
+      <aside class="receipt-wrap" aria-label="Till status">
+        <div class="receipt">
+          <div class="receipt__c">SMART CHECKOUT STORE</div>
+          <div class="receipt__c receipt__k">TILL STATUS</div>
+          <hr class="receipt__rule">
+          <div class="receipt__row"><span class="receipt__k">Till</span><span class="receipt__state" id="tillState">checking</span></div>
+          <div class="receipt__row"><span class="receipt__k">Products taught</span><span id="tProducts">-</span></div>
+          <div class="receipt__row"><span class="receipt__k">Sales today</span><span id="tSales">-</span></div>
+          <div class="receipt__row"><span class="receipt__k">Low stock</span><span id="tLow">-</span></div>
+          <hr class="receipt__rule">
+          <div class="receipt__row"><span>TAKEN TODAY</span><span class="receipt__big" id="tRevenue">-</span></div>
+          <div class="receipt__c receipt__k" id="tWhen">&nbsp;</div>
         </div>
-        <div class="till__row"><span class="till__k">Products recognised</span><span class="till__v" id="tProducts">-</span></div>
-        <div class="till__row"><span class="till__k">Sales today</span><span class="till__v" id="tSales">-</span></div>
-        <div class="till__row"><span class="till__k">Taken today</span><span class="till__v" id="tRevenue">-</span></div>
-        <div class="till__row"><span class="till__k">Low stock</span><span class="till__v" id="tLow">-</span></div>
+        <svg class="tear" height="9" width="100%" aria-hidden="true"><defs><pattern id="tearp" width="12" height="9" patternUnits="userSpaceOnUse"><path d="M0 0 L6 9 L12 0 Z"/></pattern></defs><rect width="100%" height="9" fill="url(#tearp)"/></svg>
       </aside>
     </div>
   </section>
@@ -68,7 +63,7 @@
       <article class="step">
         <div class="step__n">02</div>
         <h3>Check the read</h3>
-        <p>Each product appears with its name and price. An item the till has never seen is flagged as unknown, not charged as the nearest thing, and can be taught on the spot.</p>
+        <p>Each product appears with its name and price, drawn on the camera frame. An item the till has never seen is flagged as unknown, not charged as the nearest thing, and can be taught on the spot.</p>
       </article>
       <article class="step">
         <div class="step__n">03</div>
@@ -87,12 +82,12 @@
     </a>
     <a class="door" href="/admin">
       <span class="door__i">02</span>
-      <span><span class="door__t">Analytics</span><span class="door__d">Takings, best sellers and recent transactions.</span></span>
+      <span><span class="door__t">Analytics</span><span class="door__d">Takings by day and hour, best sellers and recent sales.</span></span>
       <span class="door__go" aria-hidden="true">&rarr;</span>
     </a>
     <a class="door" href="/monitor">
       <span class="door__i">03</span>
-      <span><span class="door__t">Monitor</span><span class="door__d">Whether the till process is up, for checking the rig during a demo.</span></span>
+      <span><span class="door__t">Monitor</span><span class="door__d">Whether the till is up, what it last sold, and what it refused.</span></span>
       <span class="door__go" aria-hidden="true">&rarr;</span>
     </a>
   </section>
@@ -103,9 +98,9 @@
     <span>Version 4 &middot; one process, one database</span>
   </footer>
 
-</div>
-</div>
+</div></div>
 
+<script src="/static/js/mast.js"></script>
 <script src="/static/js/theme.js"></script>
 <script>
 const baht = n => '฿' + Number(n).toLocaleString('en-US', {maximumFractionDigits: 0});
@@ -117,17 +112,19 @@ async function refresh() {
             fetch('/api/analytics').then(r => r.json()),
             fetch('/api/products').then(r => r.json()),
         ]);
-        state.innerHTML = '<span class="till__beacon"></span>online';
+        state.textContent = 'online';
+        state.classList.remove('off');
         document.getElementById('tProducts').textContent = p.length;
         document.getElementById('tSales').textContent    = a.today_sales;
         document.getElementById('tRevenue').textContent  = baht(a.today_revenue);
         document.getElementById('tLow').textContent      = a.low_stock_count;
+        document.getElementById('tWhen').textContent     = new Date().toLocaleString('en-GB', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
         document.getElementById('sProducts').textContent = p.length;
         document.getElementById('sRevenue').textContent  = baht(a.total_revenue);
     } catch (e) {
         // the shopkeeper should see that the till is down, not a stale number
         state.textContent = 'offline';
-        state.style.color = 'var(--danger)';
+        state.classList.add('off');
         console.error('status refresh failed', e);
     }
 }
