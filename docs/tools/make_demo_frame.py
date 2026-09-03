@@ -27,10 +27,25 @@ def bag(img, x, y, bw, bh, colour, label, sub):
     cv2.putText(img, sub, (x + 14, y + bh - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
 
+LAYS = ((30, 130, 220), "LAY'S", "Flat Original 75g")
+TASTO = ((40, 150, 70), "TASTO", "Japanese Seaweed 68g")
+
+if sys.argv[1:2] == ["--views"]:
+    # one product per frame, three placements each: what the screenshot harness
+    # enrols before it scans the two-product frame, so the demo till knows them
+    out = sys.argv[2]
+    for name, spec in (("lays", LAYS), ("tasto", TASTO)):
+        for i, (x, y) in enumerate(((150, 190), (420, 170), (300, 230))):
+            single = mat()
+            bag(single, x, y, 320, 380, *spec)
+            cv2.imwrite(f"{out}/demo_{name}_{i}.jpg", single)
+    print("wrote", out + "/demo_{lays,tasto}_{0,1,2}.jpg")
+    sys.exit(0)
+
 empty = mat()
 frame = mat()
-bag(frame, 150, 190, 320, 380, (30, 130, 220), "LAY'S", "Flat Original 75g")
-bag(frame, 560, 190, 320, 380, (40, 150, 70), "TASTO", "Japanese Seaweed 68g")
+bag(frame, 150, 190, 320, 380, *LAYS)
+bag(frame, 560, 190, 320, 380, *TASTO)
 cv2.imwrite(sys.argv[1], frame)
 if len(sys.argv) > 2:
     cv2.imwrite(sys.argv[2], empty)

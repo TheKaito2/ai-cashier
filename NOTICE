@@ -21,7 +21,11 @@ NOT covered by the Apache licence:
   loads them (tests/test_no_ultralytics.py enforces this). Do not ship them
   inside a proprietary product.
 
+Fonts bundled with the till, the dashboard, the iPhone app and the site:
+  IBM Plex Sans Thai, IBM Plex Mono   SIL Open Font License 1.1 (assets/fonts/OFL.txt)
+
 Datasets referenced by the research harness keep their own terms:
   RPC              CC BY-NC-SA 4.0
   Products-10K     non-commercial research only
   GroceryVision    see grocery-vision.github.io
+  Grocery Store    MIT (Klasson et al., WACV 2019) - the one E9 runs on

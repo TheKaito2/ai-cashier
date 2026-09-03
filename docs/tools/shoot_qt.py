@@ -6,7 +6,7 @@ usage: shoot_qt.py <out.png> [width height]
 Needs no server: the till writes the database directly.
 The dev laptop has no webcam, so cv2.VideoCapture replays docs/assets/demo_frame.jpg.
 """
-import os, sys, pathlib
+import os, sys, pathlib, tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 out = pathlib.Path(sys.argv[1]).resolve()
@@ -14,8 +14,12 @@ W, H = (int(sys.argv[2]), int(sys.argv[3])) if len(sys.argv) > 3 else (1440, 900
 out.parent.mkdir(parents=True, exist_ok=True)
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+# a throwaway shop: the harness enrols demo products and must never touch data/
+os.environ["AI_CASHIER_DATA"] = tempfile.mkdtemp(prefix="ai-cashier-shot-")
 os.chdir(ROOT)
 sys.path.insert(0, str(ROOT))
+import paths
+paths.first_run_seed()
 
 import cv2
 FRAME = cv2.imread(str(ROOT / "docs" / "assets" / "demo_frame.jpg"))
@@ -37,6 +41,15 @@ app.setStyle("Fusion")
 from recognition.scale import SimulatedScale
 from scanner.ui.main_window import MainWindow
 win = MainWindow(scale=SimulatedScale())
+# the demo mat, and the two demo products taught from three views each, so the
+# scan recognises what the demo frame shows
+ASSETS = ROOT / "docs" / "assets"
+win.pipeline.calibrate(cv2.imread(str(ASSETS / "demo_mat.png")))
+for sku, name in (("lays-flat-original", "lays"), ("tasto-japanese-seaweed", "tasto")):
+    win.pipeline.enrol(sku, [cv2.imread(str(ASSETS / f"demo_{name}_{i}.jpg")) for i in range(3)])
+win._refresh_stats()
+from PySide6.QtGui import QFontDatabase
+assert "IBM Plex Sans Thai" in QFontDatabase.families(), "bundled fonts did not load - see theme.load_fonts"
 win.scale.place(float(os.environ.get("SHOT_PAN_G", "75")))   # something on the pan
 import time; time.sleep(1.2)                                   # let the stream settle it
 win.resize(W, H)
@@ -95,5 +108,17 @@ if os.environ.get("SHOT_ENROL"):         # the "teach it a new product" dialog
         for _ in range(10):
             app.processEvents()
     alt = out.with_name(out.stem + "-enrol.png")
+    dlg.grab().save(str(alt))
+    print(f"{alt}  {alt.stat().st_size // 1024} KB")
+
+if os.environ.get("SHOT_PAID"):          # the printed receipt, after confirmation (needs SHOT_PAY)
+    from scanner.ui.main_window import ReceiptDialog
+    from server.services.checkout import confirm_payment
+    sale = confirm_payment(win.db, payment["payment_id"])
+    dlg = ReceiptDialog(sale["receipt"])
+    dlg.show()
+    for _ in range(30):
+        app.processEvents()
+    alt = out.with_name(out.stem + "-paid.png")
     dlg.grab().save(str(alt))
     print(f"{alt}  {alt.stat().st_size // 1024} KB")
