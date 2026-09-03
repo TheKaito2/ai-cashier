@@ -38,4 +38,14 @@ Each item names the file, the change, the effort, and the dossier section it com
 | 27 | Scan latency on the Pi decides whether the scan moves to a worker thread | `research/bench.py` (`scan_5_frames`) | 09 D4 | done: moved to a QThread worker after measuring 191 ms cold on the M1 |
 | 28 | Query centring fix (query normalised before the centre is subtracted); τ placeholder 0.38 → 0.75 | `recognition/gallery.py`, `recognition/fusion.py`, iOS `Gallery.swift`/`Fusion.swift` | 09 F5 | done (found by the Swift port, 3 Sep 2026) |
 
+### Real-data readiness, 3 Sep 2026
+
+| # | Change | Files | From | Status |
+|---|---|---|---|---|
+| 29 | First non-synthetic rows: E9 on the Grocery Store dataset (packages / all / iconic-first) | `research/prepare_grocerystore.py`, `run.py --tag`, `report.py`, `paper/main.tex` | 07 T1, 05 #4 | done: 45.8 % / 59.7 % top-1 at k=5, open-set AUROC 0.67 / 0.37 (claims X15) |
+| 30 | Measured threshold written where the till reads it, with the iPhone line printed | `tools/set_threshold.py` | 09 F5, fusion.py | done |
+| 31 | Capture session on a laptop or iPhone camera: `capture.py --list`, PROTOCOL 2b | `research/capture.py`, `research/PROTOCOL.md` | 07 T1 | done; camera permission is a per-terminal macOS grant |
+| 32 | The paper compiles (tectonic) | `paper/Makefile` | — | done |
+| 33 | E9 with the other encoders (MobileCLIP-B, DINOv2) — the public rows say the ImageNet trunk is the lever, not more views | `run.py --source folder --backbone …` | 05 P27, X15 | open: needs the weights downloaded |
+
 Items 1–3 change what the project may legally claim. Items 4–7 turn a demo till into something a Thai shop could switch on. Items 8–11 are what a reviewer will ask for. Items 13–16 protect the master's/PhD path.

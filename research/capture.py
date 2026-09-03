@@ -6,6 +6,7 @@ turns out to matter less than it sounds, because the method needs a handful of
 views per product rather than a labelled dataset - but those views have to be
 taken on the rig that will be doing the recognising, under its lighting.
 
+    python research/capture.py --list                 which cameras open
     python research/capture.py --mat                  photograph the empty mat first
     python research/capture.py --sku pepsi --name "Pepsi" --price 14 --views 14
     python research/capture.py --import photos/       bring in pictures taken elsewhere
@@ -51,6 +52,26 @@ def open_camera(index: int):
     if not cap.isOpened():
         raise SystemExit(f"camera {index} did not open")
     return cap
+
+
+def list_cameras(max_index: int = 5) -> int:
+    """Which camera indices open, and at what size. On a Mac the built-in camera
+    is 0 and an unlocked iPhone nearby appears as another index (Continuity Camera)."""
+    found = 0
+    for i in range(max_index):
+        cap = cv2.VideoCapture(i)
+        if not cap.isOpened():
+            continue
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        ok, frame = cap.read()
+        cap.release()
+        size = f"{frame.shape[1]}x{frame.shape[0]}" if ok else "opened but no frame"
+        print(f"  camera {i}: {size}")
+        found += ok
+    if not found:
+        print("  no camera opened (on macOS the terminal needs camera permission)")
+    return 0 if found else 1
 
 
 def capture_mat(camera: int) -> int:
@@ -204,11 +225,14 @@ def main() -> int:
                     help="the surviving v1 detector was trained on this product")
     ap.add_argument("--import", dest="import_dir", type=Path)
     ap.add_argument("--verify", action="store_true")
+    ap.add_argument("--list", action="store_true", help="probe camera indices 0-4")
     ap.add_argument("--rig-note", default="",
                     help="camera, exposure lock, light, mat, marker size, date, where bought "
                          "(research/PROTOCOL.md 0b) - stored with the product")
     args = ap.parse_args()
 
+    if args.list:
+        return list_cameras()
     if args.mat:
         return capture_mat(args.camera)
     if args.import_dir:

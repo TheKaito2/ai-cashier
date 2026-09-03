@@ -158,3 +158,17 @@ python research/report.py                    # regenerates paper/tables and figu
 
 Every generated table says at the top which source it came from. If a table you
 are about to submit says `SOURCE = synthetic`, the experiments have not been run.
+
+The one experiment that needs no products is the public benchmark, E9, on the
+Grocery Store dataset (MIT, 116 MB):
+
+```bash
+git clone --depth 1 https://github.com/marcusklasson/GroceryStoreDataset research/data/public/GroceryStoreDataset
+python research/prepare_grocerystore.py
+python research/run.py --source folder --root research/data/public/grocerystore-packages --tag packages
+python research/report.py                    # writes paper/tables/e9_public*.tex
+```
+
+After a capture session, `python tools/set_threshold.py` puts the measured E5
+threshold into the setting the till reads and prints the line for the iPhone app.
+`python research/capture.py --list` says which cameras this machine can open.

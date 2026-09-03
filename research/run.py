@@ -51,6 +51,8 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--retrain-hours", type=float, default=None,
                     help="measured hours the team spent building the v1 closed-set model")
+    ap.add_argument("--tag", default=None,
+                    help="suffix for the results file, e.g. --tag packages -> E9-packages.json")
     ap.add_argument("--only", nargs="*", default=None,
                     help="experiment ids, e.g. E2 E5")
     args = ap.parse_args()
@@ -101,8 +103,9 @@ def main() -> int:
             continue
         result["environment"] = environment()
         result["split"] = split.to_dict()
-        (RESULTS / f"{name}.json").write_text(json.dumps(result, indent=2))
-        print(f" -> results/{name}.json")
+        stem = f"{name}-{args.tag}" if args.tag else name
+        (RESULTS / f"{stem}.json").write_text(json.dumps(result, indent=2))
+        print(f" -> results/{stem}.json")
 
     print("\nnow:  python research/report.py")
     return 0
