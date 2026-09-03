@@ -189,6 +189,7 @@ allows a THB-300 cell to be used at all. \todo{cite docs/research/01 rows L03--L
 L12, L14 in the camera-ready if the venue allows non-academic references}
 
 \section{Method}
+\label{sec:method}
 
 \paragraph{Proposal.} Objects are found by differencing the frame against a
 photograph of the empty mat, per colour channel rather than in luminance --- a
@@ -269,6 +270,8 @@ fusion ablation and item-swap detection (E6); end-to-end basket pricing error
 \input{tables/e6_swap}
 \input{tables/e7_basket}
 \input{tables/e8_enrolment}
+\input{tables/e9_public}
+\input{tables/e9_public_openset}
 
 \begin{figure}[t]
 \centering
@@ -286,11 +289,33 @@ choice about how often the till may accuse an honest customer.}
 \label{fig:swap}
 \end{figure}
 
-\todo{write this section only after research/run.py --source captures. Every
+\paragraph{Public benchmark.} Table~\ref{tab:public} and Table~\ref{tab:publicopenset}
+repeat E2 and E5 on the Grocery Store dataset~\cite{klasson2019grocery}: phone
+photographs of 81 products on Swedish shop shelves, with one manufacturer
+(``iconic'') image per class. There is no mat, so the whole photograph is the
+crop; the split, the gallery rule and the threshold rule are exactly those of the
+rig experiments, run by \texttt{research/prepare\_grocerystore.py} and
+\texttt{run.py --source folder}. The \emph{packages} rows use the 30 carton
+classes (milk, juice, yoghurt), the kind of object a till sees; the \emph{iconic}
+rows put the manufacturer image first among the reference views, so $k=1$
+measures enrolment from a pack shot with no capture at all. These rows say what
+the frozen representation does on photographs nobody in the team took; they say
+nothing about the rig, its light or its mat. On this set the ImageNet-trained
+trunk is the weak part: more reference views help little and the open-set rule
+barely separates known from unknown, which makes the encoder ablation (E3), not
+$k$, the lever --- and the centred cosine of Section~\ref{sec:method} beats the raw
+cosine at every $k$ on these photographs as it did on the mat.
+
+\todo{write the rest of this section only after research/run.py --source captures. Every
 table above regenerates from the results; do not type numbers into the prose
 that are not in a table.}
 
 \section{Limitations}
+
+\paragraph{Benchmark transfer.} The public rows are shelf photographs, not mat
+crops under a fixed light: they bound what the encoder can do, not what the till
+does, and the near-identical cartons in that set (six Arla milks) are the same
+failure as ours.
 
 \paragraph{Near-identical variants.} Two flavours of the same brand in the same
 packaging are the case appearance does not solve, and no amount of enrolment

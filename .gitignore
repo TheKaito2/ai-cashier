@@ -11,6 +11,11 @@ data/mat_background.png
 research/results/
 paper/tables/
 paper/figures/
+paper/main.pdf
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
 
 # the capture session's photographs - large, and specific to one rig
 research/data/

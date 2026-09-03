@@ -100,6 +100,26 @@ python research/capture.py --verify
 
 It will say plainly what is missing. Do not move on until it says `ready`.
 
+## 2b. Laptop rig (development captures)
+
+The same tool runs on a laptop with its built-in camera, or with an iPhone as the
+camera (macOS Continuity Camera: unlock the phone nearby and it appears as another
+index in `capture.py --list`). Use it to photograph real products before the Pi rig
+exists; label every product with `--rig-note macbook-facetime` or
+`--rig-note iphone-continuity` so the manifest says which camera took it. There is no
+load cell, so give `--weight` from a kitchen scale or leave it out, in which case E6
+and E7 are skipped and `--verify` says so. The sequence is:
+
+    python research/capture.py --list
+    python research/capture.py --mat --camera 0
+    python research/capture.py --sku lays-nori --name "Lay's Nori" --price 25 --weight 52 --rig-note macbook-facetime
+    python research/capture.py --verify
+    python research/run.py --source captures && python research/report.py
+    python tools/set_threshold.py
+
+The tables this produces are real photographs and can calibrate the threshold for a
+laptop demo, but the paper's rig numbers still come from the Pi, its light and its mat.
+
 ## 3. The adversarial set
 
 Separate from the product photographs, and quick — half an hour.
