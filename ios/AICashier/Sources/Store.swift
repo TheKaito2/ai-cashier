@@ -51,22 +51,61 @@ final class Store: ObservableObject {
             Task { @MainActor in self?.refreshPreview() }
         }
         // `--demo-scan`: calibrate on the bundled empty mat and scan the demo
-        // frame straight away (screenshots, the Simulator, a first look)
-        if ProcessInfo.processInfo.arguments.contains("--demo-scan") {
+        // frame straight away (screenshots, the Simulator, a first look).
+        // `--demo-seed` first teaches the two demo products and books two sales.
+        let args = ProcessInfo.processInfo.arguments
+        if args.contains("--demo-scan") || args.contains("--demo-seed") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.calibrateMat()
-                self?.scan()
+                guard let self else { return }
+                self.calibrateMat()
+                if args.contains("--demo-seed") { self.seedDemo() }
+                self.scan()
             }
         }
+    }
+
+    /// The two demo products taught from bundled views, and two sales through
+    /// the normal checkout path, so a fresh Simulator shows a till that knows
+    /// what it is looking at.  `tools/seed_demo.py`'s twin; idempotent.
+    func seedDemo() {
+        let demo: [(sku: String, name: String, price: Double, file: String)] = [
+            ("lays-flat-original", "Lay's Flat Original 75g", 20, "demo_lays"),
+            ("tasto-japanese-seaweed", "Tasto Japanese Seaweed 68g", 24, "demo_tasto"),
+        ]
+        for d in demo where !products.contains(where: { $0.id == d.sku }) {
+            let frames = (0..<3).compactMap { DemoCamera(resource: "\(d.file)_\($0)", ext: "jpg").latest() }
+            guard let views = try? pipeline.enrol(d.sku, frames: frames) else { continue }
+            try? db.upsert(Product(id: d.sku, name: d.name, price: d.price, category: "chips", stock: 40, restricted: .none))
+            try? db.logEvent("enrolment", ["sku_id": d.sku, "views": String(views), "restricted": "none"])
+        }
+        try? db.saveGallery(pipeline.gallery)
+        reloadProducts()
+        if (try? db.sales(limit: 1))?.isEmpty ?? true {
+            let baskets: [[(productId: String, quantity: Int)]] = [
+                [("lays-flat-original", 2), ("tasto-japanese-seaweed", 1)],
+                [("tasto-japanese-seaweed", 3)],
+            ]
+            for basket in baskets {
+                if let p = try? Checkout.createPayment(db, items: basket, staffConfirmed: false) {
+                    _ = try? Checkout.confirm(db, paymentId: p.paymentId)
+                }
+            }
+            reloadProducts()
+        }
+        status = "Demo products taught"
     }
 
     private func switchCamera() {
         camera.stop()
         camera = useDemoCamera ? DemoCamera() : CameraSession()
+        preview = nil
         camera.start()
     }
 
     private func refreshPreview() {
+        // the demo image never changes: publishing a fresh CGImage of it ten
+        // times a second re-lays-out every screen for nothing
+        if camera is DemoCamera, preview != nil { return }
         if let f = camera.latest() { preview = f.cgImage() }
     }
 

@@ -4,6 +4,8 @@ import SwiftUI
 struct AICashierApp: App {
     @StateObject private var store = Store()
 
+    init() { Theme.installAppearance() }
+
     var body: some Scene {
         WindowGroup {
             RootView().environmentObject(store)
@@ -12,22 +14,19 @@ struct AICashierApp: App {
 }
 
 struct RootView: View {
-    var body: some View {
-        TabView {
-            TillView().tabItem { Label("Till", systemImage: "camera.viewfinder") }
-            InventoryView().tabItem { Label("Inventory", systemImage: "shippingbox") }
-            AnalyticsView().tabItem { Label("Takings", systemImage: "chart.bar") }
-            SettingsView().tabItem { Label("Shop", systemImage: "gearshape") }
-        }
-        .tint(Theme.accent)
-    }
-}
+    /// `--tab takings` on launch opens that tab: how the screenshot harness gets there.
+    @State private var tab = CommandLine.arguments.firstIndex(of: "--tab").map { CommandLine.arguments[$0 + 1] } ?? "till"
 
-enum Theme {
-    static let accent = Color(red: 1.0, green: 0.478, blue: 0.094)      // #FF7A18, the till's orange
-    static let ok = Color(red: 0.18, green: 0.8, blue: 0.443)
-    static let warn = Color(red: 0.9, green: 0.62, blue: 0.1)
-    static let info = Color(red: 0.298, green: 0.604, blue: 1.0)
+    var body: some View {
+        TabView(selection: $tab) {
+            TillView().tabItem { Label("Till", systemImage: "camera.viewfinder") }.tag("till")
+            InventoryView().tabItem { Label("Inventory", systemImage: "shippingbox") }.tag("inventory")
+            AnalyticsView().tabItem { Label("Takings", systemImage: "chart.bar") }.tag("takings")
+            SettingsView().tabItem { Label("Shop", systemImage: "gearshape") }.tag("shop")
+        }
+        .tint(Theme.accentInk)
+        .font(Theme.sans(17))
+    }
 }
 
 func baht(_ v: Double, _ symbol: String = "฿") -> String { symbol + String(format: "%.2f", v) }

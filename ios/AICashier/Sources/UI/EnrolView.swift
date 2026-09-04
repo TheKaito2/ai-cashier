@@ -24,9 +24,9 @@ struct EnrolView: View {
                     Button {
                         capture()
                     } label: {
-                        Text("CAPTURE VIEW \(min(frames.count + 1, Self.views)) OF \(Self.views)").frame(maxWidth: .infinity, minHeight: 50).fontWeight(.bold)
+                        Text("CAPTURE VIEW \(min(frames.count + 1, Self.views)) OF \(Self.views)")
                     }
-                    .buttonStyle(.borderedProminent).tint(Theme.accent).disabled(frames.count >= Self.views)
+                    .buttonStyle(BigButtonStyle(fill: Theme.accent)).disabled(frames.count >= Self.views)
                     Text(progress).font(.footnote).foregroundStyle(.secondary)
                 }
                 Section("Product") {
@@ -42,6 +42,7 @@ struct EnrolView: View {
                 }
                 if !note.isEmpty { Text(note).foregroundStyle(Theme.warn) }
             }
+            .paperGround()
             .navigationTitle("Add a product")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
