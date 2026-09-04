@@ -35,6 +35,23 @@ The Simulator has no camera; the app uses the bundled demo image instead
 (Shop tab → *Use the demo image*). Calibrate on it once, then SCAN finds the two
 demo packets as *unknown*, and *Teach* enrols them.
 
+Two launch arguments make a fresh Simulator show the whole thing at once
+(Xcode: scheme → Run → Arguments, or `xcrun simctl launch booted com.group3.aicashier --demo-seed`):
+
+- `--demo-seed` teaches the two demo packets from bundled views, books two
+  sales through the normal checkout path, then scans - the till then recognises
+  and prices both, and the Takings tab has data. Idempotent.
+- `--demo-scan` only calibrates on the bundled mat and scans.
+- `--tab takings` (or `inventory`, `shop`) opens that tab on launch.
+
+## Look and type
+
+The screens follow `docs/DESIGN.md` - the same tokens as the till and the
+dashboard - in `Sources/Theme.swift`. IBM Plex Sans Thai and Plex Mono ship in
+`Resources/Fonts` (SIL OFL); the PostScript names Apple registers are
+abbreviated (`IBMPlexSansThai-SmBld`, not `-SemiBold`), and `FontsTests`
+fails if any of the seven stops resolving.
+
 ## What the tests prove
 
 `Tests/Fixtures` is written by `tools/export_fixtures.py` from the Python

@@ -24,6 +24,16 @@
 	<false/>
 	<key>NSCameraUsageDescription</key>
 	<string>The camera looks at the products on the mat. No picture is ever kept.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>IBMPlexSansThai-Regular.ttf</string>
+		<string>IBMPlexSansThai-Medium.ttf</string>
+		<string>IBMPlexSansThai-SemiBold.ttf</string>
+		<string>IBMPlexSansThai-Bold.ttf</string>
+		<string>IBMPlexMono-Regular.ttf</string>
+		<string>IBMPlexMono-Medium.ttf</string>
+		<string>IBMPlexMono-SemiBold.ttf</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>

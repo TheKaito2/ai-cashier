@@ -6,9 +6,7 @@
 <title>AI Cashier</title>
 <meta name="description" content="A self-checkout till that recognises products with a camera and can be taught a new product in about thirty seconds. Windows installer, Raspberry Pi rig, and an iPhone build.">
 <link rel="icon" href="/img/icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="preload" href="/fonts/IBMPlexSansThai-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -70,8 +68,8 @@
 </section>
 
 <section class="shot" aria-label="The till">
-  <img src="/img/till.png" alt="The till screen: camera view on the left with two products found and priced, the cart with VAT and total on the right, a large PAY button." width="1440" height="900" loading="eager" fetchpriority="high">
-  <figcaption>The till. Two products recognised on the mat, priced, one tap from the cart.</figcaption>
+  <img src="/img/till.png" alt="The till screen: the camera frame with two products boxed and labelled with their names and prices, a paper receipt strip on the right with both lines and the total, and a green PAY button." width="1440" height="900" loading="eager" fetchpriority="high">
+  <figcaption>The till. Two products found on the mat, each labelled on the frame with its price; the cart is the receipt the customer will hold.</figcaption>
 </section>
 
 <section id="how" class="steps" aria-labelledby="how-h">
@@ -95,15 +93,24 @@
   </ol>
 </section>
 
-<section class="shot shot--pair" aria-label="Teaching and paying">
+<section class="shot shot--pair" aria-label="Teaching, paying, and the phone">
   <figure>
-    <img src="/img/enrol.png" alt="The Add a product dialog: camera preview with the product outlined, name, price, category, stock, a restricted-sale picker, and the scale reading 75 g." width="880" height="611" loading="lazy">
+    <img src="/img/enrol.png" alt="The Add a product dialog: camera preview with the product outlined, name, price, category, stock, a restricted-sale picker, and the scale reading 75 g." width="880" height="623" loading="lazy">
     <figcaption>Teaching a product: five views, a name, a price. The scale records its weight.</figcaption>
   </figure>
   <figure>
-    <img src="/img/payment.png" alt="The Scan to pay dialog with the total and a PromptPay QR code." width="420" height="500" loading="lazy">
-    <figcaption>Paying: a PromptPay QR any Thai banking app opens with the amount filled in.</figcaption>
+    <img src="/img/paid.png" alt="The printed receipt after payment: store name, two lines, the total, a torn bottom edge." width="420" height="503" loading="lazy">
+    <figcaption>Paid: the receipt as the printer prints it, thirty-two columns, VAT lines only for a VAT-registered shop.</figcaption>
   </figure>
+  <figure class="phone">
+    <img src="/img/iphone.png" alt="The iPhone app: the same camera frame with both products labelled, the detected list with prices, and the receipt strip." width="603" height="1311" loading="lazy">
+    <figcaption>The whole till on an iPhone, with the phone's camera.</figcaption>
+  </figure>
+</section>
+
+<section class="shot" aria-label="The dashboard">
+  <img src="/img/dashboard.png" alt="The owner's dashboard: total takings, sales today and average basket set like receipt totals, takings by day and sales by hour as bar charts, best sellers, recent sales." width="1440" height="1307" loading="lazy">
+  <figcaption>The shopkeeper's ledger, in the browser on the same machine or over the shop's Wi-Fi: takings by day and hour, what sells, what is running low.</figcaption>
 </section>
 
 <section id="refuses" class="refuses" aria-labelledby="ref-h">
