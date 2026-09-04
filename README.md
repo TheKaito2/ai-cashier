@@ -95,10 +95,12 @@ research/            experiments, capture protocol, benchmark
 paper/               LaTeX draft; tables and figures are generated, never typed
 tools/               export the backbone, calibrate the scale, print the markers
 deploy/              systemd unit for the Pi
-tests/               167 tests
+tests/               175 tests
 ios/                 the Swift till (SwiftUI, Core ML, GRDB) and its fixture-checked tests
 site/                the landing page
 build/windows/       PyInstaller spec, Inno Setup script, CI smoke test
+assets/fonts/        IBM Plex Sans Thai + Plex Mono (OFL), bundled by every surface
+docs/DESIGN.md       the one token table and type scale the till, dashboard, phone and site share
 docs/HARDWARE.md     what to buy, how to wire it, how to calibrate it, Pi OS setup
 docs/research/       the dossier: law, market, literature, venues, architecture review
 ```

@@ -1,35 +1,47 @@
-/* AI Cashier landing page.
-   Direction: receipt paper and the till's own orange. Light is warm paper;
-   dark is the till screen's palette (scanner/ui/theme.py). */
+/* AI Cashier landing page: the paper half of docs/DESIGN.md.
+   Fonts are served from this folder (IBM Plex Sans Thai + Plex Mono, OFL). */
+
+@font-face { font-family: "IBM Plex Sans Thai"; font-weight: 400; font-style: normal; font-display: swap; src: url(/fonts/IBMPlexSansThai-Regular.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Sans Thai"; font-weight: 500; font-style: normal; font-display: swap; src: url(/fonts/IBMPlexSansThai-Medium.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Sans Thai"; font-weight: 600; font-style: normal; font-display: swap; src: url(/fonts/IBMPlexSansThai-SemiBold.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Sans Thai"; font-weight: 700; font-style: normal; font-display: swap; src: url(/fonts/IBMPlexSansThai-Bold.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-style: normal; font-display: swap; src: url(/fonts/IBMPlexMono-Regular.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 500; font-style: normal; font-display: swap; src: url(/fonts/IBMPlexMono-Medium.woff2) format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 600; font-style: normal; font-display: swap; src: url(/fonts/IBMPlexMono-SemiBold.woff2) format("woff2"); }
 
 :root {
-  --paper: #F7F4EE;
-  --paper-2: #FFFFFF;
-  --ink: #14171C;
-  --muted: #5E6672;
-  --rule: #DAD5CB;
+  color-scheme: light;
+  --paper: #F3F1EC;
+  --paper-2: #FBFAF7;
+  --ink: #1A1714;
+  --muted: #6B655C;
+  --rule: #D6D2C9;
   --accent: #FF7A18;
   --accent-ink: #B4500A;
   --ok: #1E8E4E;
-  --receipt: #FFFDF8;
-  --shadow: 0 18px 40px -24px rgba(20, 23, 28, .35);
+  /* the receipt is paper in either theme */
+  --receipt: #FBFAF7;
+  --receipt-ink: #1A1714;
+  --shadow: 0 18px 40px -24px rgba(26, 23, 20, .4);
 
-  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", "IBM Plex Sans Thai", ui-monospace, SFMono-Regular, Menlo, monospace;
   --measure: 62ch;
   --w: 1120px;
   --s-1: .5rem; --s-2: 1rem; --s-3: 1.5rem; --s-4: 2.5rem; --s-5: 4rem; --s-6: clamp(4rem, 3rem + 5vw, 7rem);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #0E1116; --paper-2: #161B22; --ink: #E8EDF2; --muted: #8A98A8; --rule: #2A333F;
-    --accent: #FF7A18; --accent-ink: #FFA45C; --ok: #2ECC71; --receipt: #1D242D;
+    color-scheme: dark;
+    --paper: #131110; --paper-2: #1C1917; --ink: #F2EDE4; --muted: #A39B8F; --rule: #3A342F;
+    --accent-ink: #FFA45C; --ok: #3DD68C;
     --shadow: 0 18px 40px -24px rgba(0, 0, 0, .8);
   }
 }
 :root[data-theme="dark"] {
-  --paper: #0E1116; --paper-2: #161B22; --ink: #E8EDF2; --muted: #8A98A8; --rule: #2A333F;
-  --accent: #FF7A18; --accent-ink: #FFA45C; --ok: #2ECC71; --receipt: #1D242D;
+  color-scheme: dark;
+  --paper: #131110; --paper-2: #1C1917; --ink: #F2EDE4; --muted: #A39B8F; --rule: #3A342F;
+  --accent-ink: #FFA45C; --ok: #3DD68C;
   --shadow: 0 18px 40px -24px rgba(0, 0, 0, .8);
 }
 
@@ -44,7 +56,7 @@ body {
 a { color: var(--accent-ink); text-underline-offset: 3px; }
 a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 img { max-width: 100%; height: auto; display: block; }
-h1, h2, h3 { font-weight: 700; letter-spacing: -.015em; line-height: 1.1; text-wrap: balance; margin: 0; }
+h1, h2, h3 { font-weight: 600; letter-spacing: -.02em; line-height: 1.1; text-wrap: balance; margin: 0; }
 h1 { font-size: clamp(2.4rem, 1.4rem + 4vw, 4.4rem); }
 h2 { font-size: clamp(1.7rem, 1.2rem + 1.6vw, 2.4rem); margin-bottom: var(--s-3); }
 h3 { font-size: 1.25rem; margin-bottom: var(--s-1); }
@@ -55,6 +67,7 @@ code { font-family: var(--mono); font-size: .92em; background: color-mix(in srgb
 .skip:focus { left: 8px; }
 
 .eyebrow { font-family: var(--mono); font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--s-2); }
+.eyebrow--accent { color: var(--accent-ink); }
 .lede { font-size: 1.2rem; color: var(--ink); }
 .lede--tight { margin-bottom: var(--s-3); }
 .fine { font-size: .9rem; color: var(--muted); }
@@ -79,13 +92,13 @@ section { padding-top: var(--s-6); }
 
 .btn {
   display: inline-flex; flex-direction: column; justify-content: center; gap: 2px;
-  min-height: 64px; padding: 12px 22px; border-radius: 10px; text-decoration: none;
+  min-height: 64px; padding: 12px 22px; border-radius: 6px; text-decoration: none;
   font-weight: 600; line-height: 1.2; border: 2px solid transparent;
   transition: transform .12s ease, box-shadow .12s ease;
 }
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(0); }
-.btn--primary { background: var(--accent); color: #14171C; box-shadow: 0 10px 24px -14px rgba(255, 122, 24, .9); }
+.btn--primary { background: var(--accent); color: #1A1714; box-shadow: 0 10px 24px -14px rgba(255, 122, 24, .9); }
 .btn--primary:hover { box-shadow: 0 14px 30px -14px rgba(255, 122, 24, 1); }
 .btn--ghost { border-color: var(--rule); color: var(--ink); background: transparent; }
 .btn--ghost:hover { border-color: var(--ink); }
@@ -94,7 +107,7 @@ section { padding-top: var(--s-6); }
 
 .receipt {
   margin: 0; justify-self: center; width: min(100%, 360px);
-  background: var(--receipt); color: var(--ink);
+  background: var(--receipt); color: var(--receipt-ink);
   padding: 22px 0 18px; box-shadow: var(--shadow);
   transform: rotate(-1.2deg);
   /* the torn bottom edge */
@@ -104,9 +117,10 @@ section { padding-top: var(--s-6); }
 @media (prefers-reduced-motion: no-preference) { .receipt { transition: transform .3s ease; } .receipt:hover { transform: rotate(0deg); } }
 
 /* screenshots */
-.shot img { border-radius: 12px; border: 1px solid var(--rule); box-shadow: var(--shadow); }
+.shot img { border-radius: 6px; border: 1px solid var(--rule); box-shadow: var(--shadow); }
 .shot figcaption { font-size: .92rem; color: var(--muted); margin-top: var(--s-2); }
-.shot--pair { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: var(--s-4); align-items: start; }
+.shot--pair { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, .9fr) minmax(0, .7fr); gap: var(--s-4); align-items: start; }
+.shot--pair .phone img { border-radius: 24px; }
 .shot--pair figure { margin: 0; }
 
 /* steps: a numbered sequence, because a sale is one */
@@ -117,12 +131,12 @@ section { padding-top: var(--s-6); }
 
 /* refusals */
 .refuses ul { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--s-2); max-width: 72ch; }
-.refuses li { padding: var(--s-2) var(--s-3); background: var(--paper-2); border: 1px solid var(--rule); border-left: 4px solid var(--accent); border-radius: 0 10px 10px 0; }
+.refuses li { padding: var(--s-2) var(--s-3); background: var(--paper-2); border: 1px solid var(--rule); border-left: 4px solid var(--accent); border-radius: 0 6px 6px 0; }
 .refuses li b { display: block; margin-bottom: 2px; }
 
 /* download cards */
 .dl__grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--s-3); }
-.card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 14px; padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-1); }
+.card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 6px; padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-1); }
 .card p { max-width: none; }
 .card--win { border-color: var(--accent); box-shadow: var(--shadow); }
 .card .btn { margin: var(--s-2) 0; align-self: flex-start; max-width: 100%; }

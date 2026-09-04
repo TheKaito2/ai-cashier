@@ -46,6 +46,7 @@ Each item names the file, the change, the effort, and the dossier section it com
 | 30 | Measured threshold written where the till reads it, with the iPhone line printed | `tools/set_threshold.py` | 09 F5, fusion.py | done |
 | 31 | Capture session on a laptop or iPhone camera: `capture.py --list`, PROTOCOL 2b | `research/capture.py`, `research/PROTOCOL.md` | 07 T1 | done; camera permission is a per-terminal macOS grant |
 | 32 | The paper compiles (tectonic) | `paper/Makefile` | — | done |
+| 34 | One visual identity ("receipt & instrument") across the till, the dashboard, the iPhone app and the site: boxes and prices drawn on the camera frame, the cart as the printed receipt, Plex Sans Thai + Plex Mono bundled, inline-SVG / Swift Charts | `docs/DESIGN.md`, `scanner/ui/theme.py`, `server/static/css/style.css`, `ios/AICashier/Sources/Theme.swift`, `site/public/style.css` | user request, 4 Sep 2026 | done: `docs/shots/v4d/`, `docs/shots/ios/03-06` |
 | 33 | E9 with the other encoders (MobileCLIP-B, DINOv2) — the public rows say the ImageNet trunk is the lever, not more views | `run.py --source folder --backbone …` | 05 P27, X15 | open: needs the weights downloaded |
 
 Items 1–3 change what the project may legally claim. Items 4–7 turn a demo till into something a Thai shop could switch on. Items 8–11 are what a reviewer will ask for. Items 13–16 protect the master's/PhD path.
