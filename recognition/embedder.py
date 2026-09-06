@@ -40,6 +40,25 @@ def preprocess(crops: list[np.ndarray], size: int = INPUT,
     return np.ascontiguousarray(batch.transpose(0, 3, 1, 2))
 
 
+def stamp_preprocessing(path: str | Path, mean, std) -> None:
+    """Record in the graph how its inputs must be normalised.
+
+    Quantisation writes a new graph and does not carry metadata across, so a
+    quantised copy has to be stamped again or it silently falls back to ImageNet
+    statistics - the failure this whole mechanism exists to prevent.
+    """
+    import onnx
+    model = onnx.load(str(path), load_external_data=False)
+    keep = [p for p in model.metadata_props if p.key not in ("mean", "std")]
+    del model.metadata_props[:]
+    model.metadata_props.extend(keep)
+    for key, value in (("mean", ",".join(f"{v:.6f}" for v in np.ravel(mean))),
+                       ("std", ",".join(f"{v:.6f}" for v in np.ravel(std)))):
+        entry = model.metadata_props.add()
+        entry.key, entry.value = key, value
+    onnx.save(model, str(path))
+
+
 class TorchEmbedder:
     """Development and reference backbones.
 
@@ -173,13 +192,7 @@ class TorchEmbedder:
         return path
 
     def _stamp_preprocessing(self, path: Path) -> None:
-        import onnx
-        model = onnx.load(str(path), load_external_data=False)
-        for key, value in (("mean", ",".join(f"{v:.6f}" for v in np.ravel(self.mean))),
-                           ("std", ",".join(f"{v:.6f}" for v in np.ravel(self.std)))):
-            entry = model.metadata_props.add()
-            entry.key, entry.value = key, value
-        onnx.save(model, str(path))
+        stamp_preprocessing(path, self.mean, self.std)
 
 
 class OnnxEmbedder:

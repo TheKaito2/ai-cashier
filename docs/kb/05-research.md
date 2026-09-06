@@ -107,19 +107,34 @@ other.  Scored on the unseen half only.  Numbers below are read off
 | iconic-first | 40 | dinov2_vits14 | 54.0 | 72.5 | 74.2 |
 | iconic-first | 40 | **mobileclip_b** | **82.9** | 83.2 | 81.7 |
 
-**Abstention, max-cosine rule:**
+**Abstention, max-cosine rule.**  This is the table that decides what ships, and
+it does not agree with the accuracy one.
 
-| View | Encoder | AUROC | FPR at 95 % TPR |
-|---|---|---|---|
-| packages | mobilenet_v3_small | 0.668 | 0.795 |
-| packages | dinov2_vits14 | 0.770 | 0.679 |
-| packages | **mobileclip_b** | **0.985** | **0.080** |
-| all 81 | mobilenet_v3_small | 0.365 | 0.986 |
-| all 81 | dinov2_vits14 | 0.662 | 0.811 |
-| all 81 | **mobileclip_b** | 0.837 | 0.621 |
-| iconic-first | mobilenet_v3_small | 0.401 | 0.975 |
-| iconic-first | dinov2_vits14 | 0.727 | 0.732 |
-| iconic-first | **mobileclip_b** | 0.842 | 0.596 |
+| View | Encoder | k=5 top-1 | AUROC | FPR at 95 % TPR |
+|---|---|---|---|---|
+| packages | mobilenet_v3_small | 45.8 | 0.668 | 0.795 |
+| packages | dinov2_vits14 | 45.8 | 0.770 | 0.679 |
+| packages | mobileclip2_s0 | 79.9 | 0.936 | 0.366 |
+| packages | **mobileclip_s1** | 85.4 | **0.985** | **0.062** |
+| packages | mobileclip_b | **89.6** | 0.985 | 0.080 |
+| all 81 | mobilenet_v3_small | 59.7 | 0.365 | 0.986 |
+| all 81 | dinov2_vits14 | 73.3 | 0.662 | 0.811 |
+| all 81 | **mobileclip2_s0** | **86.9** | 0.631 | 0.839 |
+| all 81 | mobileclip_s1 | 82.8 | 0.751 | 0.721 |
+| all 81 | mobileclip_b | 81.4 | **0.837** | **0.621** |
+| iconic-first | mobilenet_v3_small | 62.8 | 0.401 | 0.975 |
+| iconic-first | dinov2_vits14 | 74.2 | 0.727 | 0.732 |
+| iconic-first | mobileclip_b | 81.7 | 0.842 | 0.596 |
+
+**Read the two columns together, because they disagree.**  On all 81 classes
+MobileCLIP2-S0 is the *most accurate* encoder measured (86.9 %) and has the
+*second-worst* abstention of the five (AUROC 0.631, worse than DINOv2).  On the
+cartons, S1 matches B's AUROC at 0.985 while wrongly accepting fewer unknowns
+(6.2 % against 8.0 %) — at half B's inference cost and four points less accuracy.
+
+An encoder chosen on top-1 alone would be S0.  An encoder chosen for a till that
+must not charge the wrong thing is S1.  That is the whole argument for reporting
+open-set numbers, and it is the thing no commercial vendor publishes.
 
 Five things this says, and they are why the experiment was worth running:
 
@@ -133,12 +148,16 @@ Five things this says, and they are why the experiment was worth running:
    falls from 79 % to **8 %** — a tenfold reduction in the failure that takes the
    wrong money.  Identification accuracy is the headline; this is the number the
    till's safety claim rests on.
-3. **Identifying well and knowing what you do not know are separable.**  DINOv2-S
-   scores exactly the same top-1 as MobileNetV3 on cartons at k=5 (45.8 %) while
-   being clearly better at abstention (AUROC 0.770 against 0.668).  A
-   representation can be no better at naming things and still much better at
-   admitting it has not seen one.  Worth a sentence in the paper: the
-   retail-checkout literature tends to report only the first.
+3. **Identifying well and knowing what you do not know are separable, and the
+   gap is wide enough to change the choice.**  Three independent demonstrations
+   now.  DINOv2-S scores exactly the same top-1 as MobileNetV3 on cartons
+   (45.8 %) while abstaining clearly better (0.770 against 0.668).  MobileCLIP-B
+   *loses* to MobileCLIP2-S0 on top-1 over all 81 classes (81.4 % against
+   86.9 %) while abstaining far better (0.837 against 0.631).  And S1 matches B's
+   AUROC at half the cost.  A representation can be no better — or actively
+   worse — at naming things and still much better at admitting it has not seen
+   one.  The retail-checkout literature reports only the first, which is how you
+   end up shipping the encoder that is confidently wrong.
 4. **More views is not monotonic.**  Nearest-view scoring peaks at k=3 and dips
    at k=5 on several rows, while prototype-mean scoring keeps climbing.  A fifth
    shelf photograph adds as much noise as signal to nearest-view scoring.
@@ -187,6 +206,15 @@ whatever the budget.  Worth stating because the naming implies otherwise.
 **MobileCLIP2-S0 is the interesting row.**  It gives up four points to S1 for a
 third off the cost, and it is the smallest thing here that beats the shipped
 encoder by thirty-four points.  If the Pi can afford anything, it is this.
+
+**MobileCLIP-S1 cannot be quantised, so 292 ms is the floor.**  Both INT8 paths
+fail on it — dynamic with a shape-inference error (a 1024/512 mismatch inside the
+graph), static with an assertion during pre-processing.  `tools/export_embedder.py`
+reports each cleanly and writes nothing rather than leaving a broken artefact.
+This matters more than it sounds: quantisation was the obvious route to making a
+CLIP encoder affordable on a Pi, and for this one it is closed.  The shipped
+MobileNetV3 still quantises, and still badly — cosine 0.61 dynamic, 0.82 static
+against its own float model, which is why the till ships FP32 and always has.
 
 **DINOv2-S/14 cannot be exported at all.**  `torch.export` fails on it, so it has
 no ONNX row above and could not ship even if it scored well — which it does not

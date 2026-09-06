@@ -101,6 +101,13 @@ MobileCLIP-S1/S2 and the MobileCLIP2 family are trained at 256 px, not 224.
 Both the width and the resolution are now read from open_clip's own model config
 rather than a hand-written table, because those are two more numbers that drift.
 
+**Quantisation fails on an encoder.**  Not every graph survives the ONNX
+quantiser — MobileCLIP-S1 fails both the dynamic and the static path.  The tool
+reports it and writes nothing; do not treat a missing `-int8` file as a build
+error.  And check the agreement cosine before believing any quantised model:
+the shipped MobileNetV3's INT8 copies score 0.61 and 0.82 against their own
+float model, which is why the till runs FP32.
+
 **`torch.export` fails on an encoder.**  Some models simply do not freeze —
 DINOv2-S/14 is one.  `tools/export_embedder.py` reports it and exits non-zero
 instead of writing a broken graph, and `research/bench.py` falls back to torch

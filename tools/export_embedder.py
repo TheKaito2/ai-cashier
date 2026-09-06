@@ -17,7 +17,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from recognition.embedder import INPUT, OnnxEmbedder, TorchEmbedder   # noqa: E402
+from recognition.embedder import (INPUT, OnnxEmbedder, TorchEmbedder,   # noqa: E402
+                                  stamp_preprocessing)
 
 
 def rel(path: Path) -> str:
@@ -54,13 +55,23 @@ def main() -> int:
         return 1
     print(f"  {rel(out)}  {out.stat().st_size / 1e6:.1f} MB  dim={torch_model.dim}")
 
+    extra = []
     if args.int8:
         from onnxruntime.quantization import QuantType, quantize_dynamic
         q = out.with_name(out.stem + "-int8.onnx")
-        quantize_dynamic(str(out), str(q), weight_type=QuantType.QInt8)
-        print(f"  {rel(q)}  {q.stat().st_size / 1e6:.1f} MB")
-
-    extra = [q] if args.int8 else []
+        try:
+            quantize_dynamic(str(out), str(q), weight_type=QuantType.QInt8)
+        except Exception as e:
+            # not every graph survives the quantiser.  Say which, and why it
+            # matters: an encoder that cannot be quantised is one you pay full
+            # floating-point price for on the target hardware.
+            q.unlink(missing_ok=True)
+            print(f"  dynamic INT8 failed for {args.backbone} - "
+                  f"{type(e).__name__}: {str(e)[:160]}")
+        else:
+            stamp_preprocessing(q, torch_model.mean, torch_model.std)
+            print(f"  {rel(q)}  {q.stat().st_size / 1e6:.1f} MB")
+            extra.append(q)
     if args.int8_static:
         # Dynamic INT8 quantises weights only and re-quantises activations per
         # call, which on a tiny convnet cost 2.2x speed for nothing (measured).
@@ -84,21 +95,37 @@ def main() -> int:
 
         class Reader(CalibrationDataReader):
             def __init__(self):
-                self.batches = iter([{"images": preprocess([c])} for c in cal])
+                # calibrate through the model's own normalisation and input
+                # size: feeding ImageNet statistics to a CLIP encoder fixes the
+                # activation ranges around inputs it will never see, and the
+                # quantised graph is then wrong in a way that looks like
+                # "quantisation hurt this model"
+                self.batches = iter([
+                    {"images": preprocess([c], size=torch_model.input,
+                                          mean=torch_model.mean, std=torch_model.std)}
+                    for c in cal])
             def get_next(self):
                 return next(self.batches, None)
 
         pre = out.with_name(out.stem + "-pre.onnx")
-        quant_pre_process(str(out), str(pre))
         qs = out.with_name(out.stem + "-int8s.onnx")
-        quantize_static(str(pre), str(qs), Reader(), quant_format=QuantFormat.QDQ,
-                        activation_type=QuantType.QUInt8, weight_type=QuantType.QInt8,
-                        per_channel=True)
-        pre.unlink(missing_ok=True)
-        pre.with_suffix(".onnx.data").unlink(missing_ok=True)
-        print(f"  {rel(qs)}  {qs.stat().st_size / 1e6:.1f} MB  (static INT8, "
-              f"{len(cal)} calibration crops)")
-        extra.append(qs)
+        try:
+            quant_pre_process(str(out), str(pre))
+            quantize_static(str(pre), str(qs), Reader(), quant_format=QuantFormat.QDQ,
+                            activation_type=QuantType.QUInt8, weight_type=QuantType.QInt8,
+                            per_channel=True)
+        except Exception as e:
+            qs.unlink(missing_ok=True)
+            print(f"  static INT8 failed for {args.backbone} - "
+                  f"{type(e).__name__}: {str(e)[:160]}")
+        else:
+            stamp_preprocessing(qs, torch_model.mean, torch_model.std)
+            print(f"  {rel(qs)}  {qs.stat().st_size / 1e6:.1f} MB  (static INT8, "
+                  f"{len(cal)} calibration crops)")
+            extra.append(qs)
+        finally:
+            pre.unlink(missing_ok=True)
+            pre.with_suffix(".onnx.data").unlink(missing_ok=True)
 
     # the export is worthless if it does not agree with the model it came from.
     # Checked on product-like crops (held-out synthetic seeds), not on noise: a
