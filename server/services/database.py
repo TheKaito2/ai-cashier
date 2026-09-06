@@ -102,6 +102,11 @@ DEFAULT_SETTINGS = {
     # slip verification (docs/research/04 section 4); empty = not verified
     "slip_verifier_url": "",
     "slip_verifier_token": "",
+    # unattended escalation (server/services/escalation.py).  Off until a shop
+    # turns it on: a till that calls for staff before anyone has calibrated a
+    # scale teaches the shop to ignore it.
+    "escalation_enabled": False,
+    "escalation_supervise_above_baht": 100.0,
 }
 
 RESTRICTIONS = ("none", "alcohol", "tobacco")
@@ -365,7 +370,8 @@ class Database:
 
     # ----------------------------------------------------------- deployment log
 
-    EVENT_KINDS = ("enrolment", "abstention", "override", "basket_check")
+    EVENT_KINDS = ("enrolment", "abstention", "override", "basket_check",
+                   "walk_away", "supervisor_called")
 
     def log_event(self, kind: str, payload: dict) -> int:
         """Record something the paper's later tiers will want to count.

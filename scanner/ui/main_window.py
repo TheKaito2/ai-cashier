@@ -27,7 +27,8 @@ from PySide6.QtWidgets import (
 )
 
 from recognition.embedder import OnnxEmbedder
-from recognition.fusion import FusionConfig, Status, item_weight_for_scan, verify_basket
+from recognition.fusion import (MIN_ITEM_DELTA_G, FusionConfig, Status,
+                                item_weight_for_scan, verify_basket)
 from recognition.gallery import MIN_SKUS_TO_FREEZE, SkuGallery
 from recognition.pipeline import RecognitionPipeline, RecognisedItem, priors_from_products
 from recognition.proposer import BackgroundSubtractionProposer
@@ -40,6 +41,9 @@ from scanner.ui.enrol_dialog import EnrolDialog
 # the till reads the same database the dashboard reads
 from server.services.checkout import CheckoutError, confirm_payment, create_payment
 from server.services.database import Database
+from server.services.escalation import (EscalationPolicy, Trigger, decide,
+                                        value_at_risk_for_swap,
+                                        value_at_risk_for_walk_away)
 from server.services.restrictions import sale_gate
 
 import paths
@@ -461,6 +465,14 @@ class MainWindow(QMainWindow):
         self.frame_timer.timeout.connect(self._draw_frame)
         self.frame_timer.start(int(1000 / self.settings["display"].get("fps", 30)))
 
+        # unattended escalation: the pan is watched for goods leaving unpaid,
+        # and the viewfinder is the light the shop sees from across the room
+        self._payment_in_progress = False
+        self._pan_had_goods = False
+        self._flash_left = 0
+        self._flash_timer = QTimer(self)
+        self._flash_timer.timeout.connect(self._on_flash)
+
         self.clock_timer = QTimer(self)
         self.clock_timer.timeout.connect(self._tick)
         self.clock_timer.start(1000)
@@ -664,6 +676,84 @@ class MainWindow(QMainWindow):
         self.stats.setProperty("state", "ok" if calibrated else "bad")
         _repolish(self.stats)
 
+    # ------------------------------------------------------- escalation
+
+    def _escalation_policy(self) -> EscalationPolicy:
+        s = self.db.get_settings()
+        return EscalationPolicy(
+            enabled=bool(s.get("escalation_enabled", False)),
+            supervise_above_baht=float(s.get("escalation_supervise_above_baht", 100.0)))
+
+    def _flash_alert(self, times: int = 6) -> None:
+        """Make the till visible from across the room.
+
+        The screen is the light: a 14-inch panel flashing red is seen further
+        than any lamp a THB-10,000 rig could afford, and it needs no relay, no
+        wiring and no second thing to fail.
+        """
+        self._flash_left = times * 2
+        self._flash_timer.start(320)
+
+    def _on_flash(self) -> None:
+        if self._flash_left <= 0:
+            self._flash_timer.stop()
+            self._set_view_state("")
+            return
+        self._flash_left -= 1
+        self._set_view_state("alert" if self._flash_left % 2 else "")
+
+    def _escalate(self, escalation) -> None:
+        """Act on a decision from server/services/escalation.py.
+
+        The decision itself is made there, by a pure function with no Qt in it,
+        so that what an unattended till does to a customer can be read and
+        argued about without opening a UI file.
+        """
+        # a weight mismatch is already on the record as a basket_check by the
+        # time it gets here; a walk-away has nothing else logging it
+        if escalation.trigger is Trigger.WALK_AWAY:
+            self.db.log_event("walk_away",
+                              {"response": escalation.response.value,
+                               "value_at_risk": escalation.value_at_risk,
+                               "reason": escalation.reason})
+        if escalation.calls_a_person:
+            self.db.log_event("supervisor_called",
+                              {"trigger": escalation.trigger.value,
+                               "value_at_risk": escalation.value_at_risk,
+                               "reason": escalation.reason})
+            logger.warning("supervisor called: %s", escalation)
+            self._flash_alert()
+            self._set_status(f"Please wait for a member of staff - {escalation.reason}")
+        elif escalation.response is not escalation.response.LOG:
+            self._set_status(escalation.reason.capitalize())
+
+    def _watch_for_walk_away(self, grams) -> None:
+        """Goods were scanned, then taken off the mat, and nothing was paid.
+
+        This is the one theft the mat can actually see.  Anything that never
+        touched it - a pocket, a bag - is invisible here, and saying so plainly
+        is more useful than pretending otherwise (docs/kb/07-gotchas.md).
+        """
+        if self._payment_in_progress or self.scale is None:
+            return
+        items = self.cart.get_items()
+        if not items:
+            self._pan_had_goods = False
+            return
+        if grams is None:
+            return
+        if grams >= MIN_ITEM_DELTA_G:
+            self._pan_had_goods = True
+            return
+        if not self._pan_had_goods:
+            return
+
+        self._pan_had_goods = False
+        total = self.cart.get_summary()["total"]
+        self._escalate(decide(Trigger.WALK_AWAY,
+                              value_at_risk_for_walk_away(total),
+                              self._escalation_policy()))
+
     def _set_view_state(self, state: str) -> None:
         """The viewfinder's border is the till's state: scanning, unknown, ready."""
         self.view.setProperty("state", state)
@@ -678,6 +768,7 @@ class MainWindow(QMainWindow):
         else:
             grams = self.scale.read_stable_grams()
             self.pan_readout.setText(f"PAN {grams:.0f} g" if grams is not None else "PAN settling")
+            self._watch_for_walk_away(grams)
 
     def _draw_frame(self):
         ok, frame = self.video.read()
@@ -1043,6 +1134,12 @@ class MainWindow(QMainWindow):
         if check.ok:
             return True
 
+        escalation = decide(
+            Trigger.WEIGHT_MISMATCH,
+            value_at_risk_for_swap([it.product.price for it in self.cart.get_items()]),
+            self._escalation_policy())
+        self._escalate(escalation)
+
         box = QMessageBox(self)
         box.setStyleSheet(theme.QSS)
         box.setIcon(QMessageBox.Warning)
@@ -1087,15 +1184,21 @@ class MainWindow(QMainWindow):
                        "promptpay_id in the shop settings before taking money.")
 
         self.pending_payment = payment
-        if PaymentDialog(payment, self).exec() != QDialog.Accepted:
-            self._set_status("Payment cancelled - nothing was charged")
-            return
+        # a customer lifting goods off the pan while paying is not a walk-away
+        self._payment_in_progress = True
         try:
-            sale = confirm_payment(self.db, payment["payment_id"])
-        except CheckoutError as e:
-            # e.g. a slip verifier is configured and no slip was checked
-            self._warn("Payment not confirmed", e.payload.get("error", "unknown error"))
-            return
+            if PaymentDialog(payment, self).exec() != QDialog.Accepted:
+                self._set_status("Payment cancelled - nothing was charged")
+                return
+            try:
+                sale = confirm_payment(self.db, payment["payment_id"])
+            except CheckoutError as e:
+                # e.g. a slip verifier is configured and no slip was checked
+                self._warn("Payment not confirmed", e.payload.get("error", "unknown error"))
+                return
+        finally:
+            self._payment_in_progress = False
+            self._pan_had_goods = False
         self.cart.clear()
         self._new_basket()
         self._refresh_cart()

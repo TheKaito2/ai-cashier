@@ -41,6 +41,20 @@ data, explicit consent) is not engaged. The system must never be extended with f
 recognition for loyalty, age estimation or loss prevention without re-doing this
 assessment.
 
+## Unattended escalation
+
+An unattended till may flash its own screen and log that a member of staff was
+called (`server/services/escalation.py`). That changes nothing about what is
+seen or kept: the events written are a weight discrepancy, a value at risk in
+baht, and a response tier. **No frame is captured, no person is identified, and
+no image is stored**, so the assessment above is unaffected.
+
+The till does not act on a customer physically. It has no door, gate or alarm
+output, and `tests/test_escalation.py` pins the set of responses so that adding
+one is a deliberate act with its own argument. If this system is ever extended
+to hold a customer, record them, or identify them, the legal basis above stops
+applying and this document must be redone before it ships.
+
 ## Research captures are different
 
 `research/capture.py` **does** store images. Those sessions are run by the team with

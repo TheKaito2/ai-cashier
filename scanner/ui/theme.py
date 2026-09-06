@@ -88,6 +88,7 @@ QLabel#viewfinder[state="scanning"]  { border-color: $accent; }
 QLabel#viewfinder[state="unknown"]   { border-color: $accent; }
 QLabel#viewfinder[state="ambiguous"] { border-color: $info; }
 QLabel#viewfinder[state="ready"]     { border-color: $ok; }
+QLabel#viewfinder[state="alert"]     { border-color: $bad; }
 
 /* instrument readouts */
 #readout { color: $muted; font-family: $mono; font-size: 13px; letter-spacing: 0.5px; }

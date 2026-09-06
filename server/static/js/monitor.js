@@ -6,7 +6,8 @@
     const when = iso => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-    const KIND = { enrolment: 'ok', abstention: 'warn', override: 'info', basket_check: 'muted' };
+    const KIND = { enrolment: 'ok', abstention: 'warn', override: 'info', basket_check: 'muted',
+                   walk_away: 'warn', supervisor_called: 'bad' };
 
     function describe(e) {
         switch (e.kind) {

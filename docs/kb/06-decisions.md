@@ -124,6 +124,33 @@ Seven faces shipped in the repository, registered with Qt by
 and served locally by both web surfaces.  A shop counter may have no internet, and
 a silently substituted fallback font breaks the 32-column receipt alignment.
 
+### The till escalates, and it never locks a door
+*6 September 2026, `server/services/escalation.py`.*
+
+An unattended till has to respond to a discrepancy without a person standing
+there.  The response is graded by what is at stake — nudge, hold the sale, or
+call somebody — and the shop sets the baht line.  What it will not do is act on
+a customer physically.
+
+Two reasons, both already in the dossier.  Most self-checkout loss is
+**accidental**, not malicious (`docs/research/03-market.md`, rows M19 and M20),
+so a till that treats every mismatch as theft is mostly accusing honest people;
+the incumbents nudge rather than accuse for exactly this reason (row H04).  And
+detaining somebody on a false positive is a far worse outcome than losing a
+packet of crisps — it is not a decision a weight sensor is competent to make.
+
+The best abstention rate on record is 8 % of unknown items wrongly accepted, and
+that is with an encoder the till does not yet run.  At two hundred transactions a
+day the arithmetic alone rules out physical intervention.
+
+`tests/test_escalation.py` asserts the response set has exactly four tiers, so
+adding a fifth forces someone to write the ethics argument for it.
+
+**Rules out** door locks, gates and alarms triggered by software alone.  The
+escalation ladder deliberately mirrors the design principle the rest of the
+system already follows: `recognition/fusion.py:verify_basket` returns nothing
+rather than a false verdict, and abstention exists so the till does not guess.
+
 ### The knowledge base is committed; the graph is not
 *6 September 2026, this folder.*
 

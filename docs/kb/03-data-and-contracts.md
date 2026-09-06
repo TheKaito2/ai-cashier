@@ -32,8 +32,8 @@ payment in one `BEGIN IMMEDIATE` transaction.  A failed sale leaves nothing behi
 `events` is not incidental.  `docs/research/07-research-roadmap.md` asks for four
 logs so the master's- and PhD-scale questions have data years from now; this table
 is them.  The kinds are fixed in `server/services/database.py:EVENT_KINDS` —
-`enrolment`, `abstention`, `override`, `basket_check` — and an unknown kind is
-refused rather than stored.
+`enrolment`, `abstention`, `override`, `basket_check`, `walk_away` and
+`supervisor_called` — and an unknown kind is refused rather than stored.
 
 ## Settings
 
@@ -42,7 +42,8 @@ Two different things are called settings and they live in different places.
 **Shop settings** live in the `settings` table, seeded from
 `server/services/database.py:DEFAULT_SETTINGS`: `store_name`, `tax_rate` (0.07),
 `currency`, `detection_confidence`, `theme`, `vat_registered`, `tin`,
-`store_address`, `slip_verifier_url`, `slip_verifier_token`.
+`store_address`, `slip_verifier_url`, `slip_verifier_token`,
+`escalation_enabled` (off by default) and `escalation_supervise_above_baht`.
 
 Three keys are read but **not** in that dict — they exist only once something
 writes them, and the code must tolerate their absence:

@@ -430,3 +430,137 @@ def test_the_viewfinder_may_shrink_below_the_frame_it_last_showed(till):
     policy = window.view.sizePolicy()
     assert policy.horizontalPolicy() == QSizePolicy.Ignored
     assert policy.verticalPolicy() == QSizePolicy.Ignored
+
+
+# ------------------------------------------------- unattended escalation
+
+def _turn_escalation_on(window, above=100.0):
+    window.db.set_setting("escalation_enabled", True)
+    window.db.set_setting("escalation_supervise_above_baht", above)
+
+
+def _kinds(window):
+    return [e["kind"] for e in window.db.get_events()]
+
+
+def test_goods_taken_off_the_mat_unpaid_are_noticed(till):
+    """The one theft a mat can actually see: scanned, then carried away."""
+    cell = StubCell(200.0)
+    window = till(scale=cell)
+    _turn_escalation_on(window)
+    put_in_cart(window, "lays-flat-original")
+
+    window._tick()                       # goods are on the pan
+    cell.grams = 0.0                     # and now they are not
+    window._tick()
+
+    assert "walk_away" in _kinds(window)
+
+
+def test_a_cheap_walk_away_does_not_summon_anybody(till):
+    cell = StubCell(200.0)
+    window = till(scale=cell)
+    _turn_escalation_on(window, above=1_000.0)
+    put_in_cart(window, "lays-flat-original")
+    window._tick()
+    cell.grams = 0.0
+    window._tick()
+
+    assert "walk_away" in _kinds(window)
+    assert "supervisor_called" not in _kinds(window)
+
+
+def test_an_expensive_walk_away_summons_somebody_and_lights_the_till(till):
+    cell = StubCell(200.0)
+    window = till(scale=cell)
+    _turn_escalation_on(window, above=1.0)
+    put_in_cart(window, "lays-flat-original")
+    window._tick()
+    cell.grams = 0.0
+    window._tick()
+
+    assert "supervisor_called" in _kinds(window)
+    assert window._flash_timer.isActive(), "the screen is the light; it should be flashing"
+
+
+def test_a_shop_that_never_turned_escalation_on_is_never_interrupted(till):
+    cell = StubCell(200.0)
+    window = till(scale=cell)                    # defaults: escalation off
+    put_in_cart(window, "lays-flat-original")
+    window._tick()
+    cell.grams = 0.0
+    window._tick()
+
+    assert "supervisor_called" not in _kinds(window)
+
+
+def test_an_empty_cart_walking_away_is_not_an_event(till):
+    """Nothing was scanned, so nothing was taken."""
+    cell = StubCell(200.0)
+    window = till(scale=cell)
+    _turn_escalation_on(window, above=1.0)
+    window._tick()
+    cell.grams = 0.0
+    window._tick()
+
+    assert _kinds(window) == []
+
+
+def test_lifting_the_goods_while_paying_is_not_a_walk_away(till):
+    cell = StubCell(200.0)
+    window = till(scale=cell)
+    _turn_escalation_on(window, above=1.0)
+    put_in_cart(window, "lays-flat-original")
+    window._tick()
+
+    window._payment_in_progress = True            # the QR is on screen
+    cell.grams = 0.0
+    window._tick()
+
+    assert "walk_away" not in _kinds(window)
+
+
+def test_the_same_goods_are_not_reported_twice(till):
+    cell = StubCell(200.0)
+    window = till(scale=cell)
+    _turn_escalation_on(window, above=1.0)
+    put_in_cart(window, "lays-flat-original")
+    window._tick()
+    cell.grams = 0.0
+    window._tick()
+    window._tick()
+    window._tick()
+
+    assert _kinds(window).count("walk_away") == 1
+
+
+def test_an_unsettled_pan_is_not_evidence_of_anything(till):
+    cell = StubCell(200.0)
+    window = till(scale=cell)
+    _turn_escalation_on(window, above=1.0)
+    put_in_cart(window, "lays-flat-original")
+    window._tick()
+    cell.settled = False                          # still wobbling
+    window._tick()
+
+    assert "walk_away" not in _kinds(window)
+
+
+def test_an_expensive_weight_mismatch_calls_someone_as_well_as_holding(till, operator):
+    window = till(scale=StubCell(400.0))
+    _turn_escalation_on(window, above=1.0)
+    put_in_cart(window, "lays-flat-original")
+    operator.presses = "Go back"
+
+    assert window._basket_weight_ok() is False
+    assert "supervisor_called" in _kinds(window)
+
+
+def test_a_cheap_weight_mismatch_still_holds_but_calls_nobody(till, operator):
+    window = till(scale=StubCell(400.0))
+    _turn_escalation_on(window, above=10_000.0)
+    put_in_cart(window, "lays-flat-original")
+    operator.presses = "Go back"
+
+    assert window._basket_weight_ok() is False, "a mismatch must still stop the sale"
+    assert "supervisor_called" not in _kinds(window)
