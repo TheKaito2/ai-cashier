@@ -12,3 +12,6 @@ pytest>=8.0
 httpx
 # research-only encoders for the E3 ablation (MobileCLIP, SigLIP); MIT
 open_clip_torch>=2.24
+# the documentation screenshots (docs/tools/shoot_web.py); after installing,
+# fetch the browser once with:  python -m playwright install chromium
+playwright>=1.40

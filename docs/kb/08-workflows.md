@@ -121,6 +121,13 @@ the PDF on purpose.
 
 ## Screenshots
 
+The web harness needs a browser once per machine:
+
+```bash
+pip install -r requirements-research.txt
+python -m playwright install chromium
+```
+
 ```bash
 python docs/tools/shoot_qt.py                        # the till, offscreen
 SHOT_W=390 SHOT_H=844 python docs/tools/shoot_web.py  # the dashboard at a phone width
