@@ -30,6 +30,23 @@ def test_the_currency_symbol_is_not_mojibake(db):
     assert db.get_settings()["currency"] == "฿"
 
 
+def test_a_new_shop_opens_the_dashboard_light(db):
+    """docs/DESIGN.md: light by default, because a shop is bright.
+
+    The seeded value and the fallback used to disagree - the table said dark and
+    get_theme() said light - so a fresh install contradicted the design document
+    it was built from.
+    """
+    assert db.get_settings()["theme"] == "light"
+    assert db.get_theme() == "light"
+
+
+def test_the_dead_v3_detector_setting_is_gone(db):
+    """detection_confidence belonged to the YOLO till. Nothing reads it now, and
+    a setting that looks adjustable but changes nothing is a trap."""
+    assert "detection_confidence" not in db.get_settings()
+
+
 def test_every_product_has_the_fields_the_till_needs(db):
     for p in db.get_products():
         for field in ("id", "name", "price", "category", "stock", "min_stock"):

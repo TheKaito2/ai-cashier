@@ -111,4 +111,5 @@ builds the eight EDI progress reports from `docs/tools/report_content.py`;
 disagreements; `docs/tools/shoot_term.py` renders `docs/evidence/*.txt` to images.
 The dated screenshot sets `docs/shots/aug10` through `docs/shots/aug28` are the
 figures in those reports and should be treated as a submitted record — do not
-regenerate them.
+regenerate them.  `docs/shots/README.md` says what every image shows and which
+sets are still current.

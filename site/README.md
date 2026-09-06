@@ -7,4 +7,5 @@ Cloudflare Worker named `ai-cashier-site`.
 
 The download button points at the GitHub release's `latest/download/` URL, and
 the page asks the GitHub API for the current tag, size and date, so it never
-needs a manual bump. Screenshots come from `docs/shots/v4c/`.
+needs a manual bump. Screenshots come from `docs/shots/v4d/` and `docs/shots/ios/`;
+`docs/shots/README.md` says which set is current.

@@ -92,8 +92,8 @@ DEFAULT_SETTINGS = {
     "store_name": "Smart Checkout Store",
     "tax_rate": 0.07,
     "currency": "฿",
-    "detection_confidence": 0.6,
-    "theme": "dark",
+    # docs/DESIGN.md: light by default because a shop is bright
+    "theme": "light",
     # receipts (docs/research/01 section 4): a VAT-registered shop prints an
     # abbreviated tax invoice; everyone else prints a plain receipt
     "vat_registered": False,

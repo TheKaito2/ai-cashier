@@ -118,7 +118,7 @@ Xcode project.
 | `docs/tools/` | Eight scripts that generate the school deliverables and every screenshot |
 | `docs/evidence/` | Eight captured terminal transcripts backing the progress reports |
 | `docs/assets/` | The demo frame, the demo mat, and six real product photographs |
-| `docs/shots/` | Thirteen dated screenshot sets — `aug10`…`aug28` back the eight submitted EDI reports; `v4`…`v4d` and `ios` are the current surfaces |
+| `docs/shots/` | Thirteen dated screenshot sets, indexed by `docs/shots/README.md` — `aug10`…`aug28` back the eight submitted EDI reports; `v4`…`v4d` and `ios` are the current surfaces |
 
 ## Generated, never edited by hand
 

@@ -33,11 +33,16 @@ Not blocked by it, and already done instead: E9 on a public dataset, which is wh
 |---|---|---|
 | 33 | Rerun E9 with MobileCLIP-B or DINOv2 — the public rows say the encoder is the lever, not the number of views.  Needs the weights downloaded | `docs/research/08-action-items.md` |
 | 37 | **E1 has never run on a photograph.**  `research/experiments.py:e1_closed_set_baseline` exists and is tested, but it needs the twelve legacy products photographed with `capture.py --in-legacy-model`, ultralytics installed, and the gitignored AGPL `models/*.pt` present.  Until then it returns `insufficient_data` and `paper/tables/e1_closed_set.tex` is a "NOT RUN" stub | `docs/kb/05-research.md` |
-| — | `research/report.py`, `research/bench.py` and `research/capture.py` still have no tests, and seven of the eight `tools/` scripts have none either | — |
-| — | `server/services/database.py:get_theme` defaults to `light` while `DEFAULT_SETTINGS` says `dark`.  Harmless today, untested, and exactly the kind of thing that surprises someone later | — |
-| — | `detection_confidence` is seeded into the settings table and read by nothing.  A leftover from the version 3 detector | `docs/kb/03-data-and-contracts.md` |
-| — | `docs/shots/` has 60 images across 13 directories and no manifest saying which shot shows what or which are current | `docs/kb/04-surfaces.md` |
-| — | The Cloudflare account id and account email were committed in `site/.wrangler/cache/wrangler-account.json`.  Untracked and gitignored on 6 September 2026, but **they remain in the git history** of a public repository.  Removing them needs a history rewrite and a force push, which is the owner's call | — |
+| — | `tools/export_embedder.py`, `tools/export_coreml.py`, `tools/export_fixtures.py`, `tools/seed_demo.py` and `tools/make_marker.py` still have no tests — each writes into the repository, so testing them needs the output paths made injectable first | — |
+| — | `tools/seed_demo.py` writes the mat and the gallery to the repository's own `data/` rather than to `paths.py:data_dir`, so it ignores `AI_CASHIER_DATA`.  Harmless for a dev demo, wrong for a frozen install, and it is why the script has no test | — |
+
+Closed on 6 September 2026: the Cloudflare account id and account email that were
+committed in `site/.wrangler/cache/wrangler-account.json` are gone from the whole
+history — `git filter-repo` over every ref, force-pushed, tags rewritten, the
+release assets intact.  GitHub no longer serves the blob at any old revision.  A
+clone or fork taken before that push still contains it, and the pre-rewrite
+commit objects may linger on GitHub until it garbage-collects; the account id is
+an identifier rather than a credential, so nothing needs rotating.
 
 ## What this laptop cannot verify
 
