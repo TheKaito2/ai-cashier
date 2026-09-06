@@ -45,6 +45,16 @@ clone or fork taken before that push still contains it, and the pre-rewrite
 commit objects may linger on GitHub until it garbage-collects; the account id is
 an identifier rather than a credential, so nothing needs rotating.
 
+**A note on the baseline.**  The plan is to retrain the closed-set detector
+rather than reuse the version 1 weights, whose training time nobody recorded.
+`tools/export_labels.py` turns a capture session into its training set in one
+command, so the retrain costs no manual labelling — which is worth knowing
+because it changes what E8 is really claiming.  If labelling is free, the
+argument is not labour but **recurrence**: adding product twenty-one means
+retraining the detector and revalidating the other twenty, against appending
+five vectors and touching nothing.  That is the comparison that survives
+scrutiny, and it is what E8 should be written to say.
+
 ## What this laptop cannot verify
 
 Stated here so no future session claims otherwise.

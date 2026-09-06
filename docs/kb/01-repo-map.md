@@ -93,6 +93,9 @@ database, and never writes a file — the last is enforced by `tests/test_privac
 `tools/export_fixtures.py` (the JSON that keeps Swift honest) ·
 `tools/calibrate_scale.py` and `tools/scale_drift.py` (the load cell) ·
 `tools/make_marker.py` (printable ArUco sheets) ·
+`tools/export_labels.py` (captures to a YOLO training set, boxes computed by the
+proposer rather than drawn by hand) ·
+`tools/reproduce.py` (clean checkout to every table) ·
 `tools/check_kb.py` (this folder's link checker).
 
 ## `ios/AICashier/` — the phone

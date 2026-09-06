@@ -68,6 +68,29 @@ reads as anything but noise.
 this from a terminal a human has granted camera access; an agent's process is
 refused with "not authorized to capture video".
 
+## Retrain the closed-set baseline
+
+The proposed system needs none of this — enrolment appends vectors and trains
+nothing.  The detector it is argued against does need a labelled dataset, and
+the capture session already contains both halves of every label: the class from
+the folder `capture.py --sku` filed the photograph under, and the rectangle from
+subtracting the empty mat.
+
+```bash
+python tools/export_labels.py            # -> research/data/yolo, one command
+yolo detect train data=research/data/yolo/data.yaml model=yolov8n.pt
+```
+
+Views 0 to k-1 train and the rest validate, matching what enrolment uses, so
+both systems learn from the same examples and are scored on the same held-out
+ones.  Photographs the mat subtraction cannot explain are left out and counted
+rather than labelled empty — an empty label would teach the detector that the
+product is not there.
+
+**Time the training and the labelling.**  E8 compares those hours against
+enrolment, and that number is currently `null` because nobody wrote it down last
+time.
+
 ## Run the experiments
 
 ```bash
