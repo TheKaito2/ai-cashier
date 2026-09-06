@@ -286,3 +286,19 @@ a { color: inherit; }
     .beacon { animation: none; }
     .door, .door__go { transition: none; }
 }
+
+/* ---------------------------------------------------------------- callout
+   The one thing on the monitor page somebody has to act on: an unattended
+   till has asked for a person.  Loud on purpose, and it removes itself when
+   the events stop carrying it. */
+.callout {
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  border: 1px solid var(--bad);
+  border-left: 4px solid var(--bad);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bad) 8%, var(--surface));
+  color: var(--ink);
+  font-size: 15px;
+}
+.callout strong { color: var(--bad); }

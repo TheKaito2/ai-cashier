@@ -30,7 +30,9 @@ def rel(path: Path) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("backbone", nargs="?", default="mobilenet_v3_small",
-                    choices=sorted(TorchEmbedder.BACKBONES))
+                    choices=sorted({**TorchEmbedder.BACKBONES,
+                                    **TorchEmbedder.CLIP_BACKBONES,
+                                    **TorchEmbedder.HUB_BACKBONES}))
     ap.add_argument("--out", default=None)
     ap.add_argument("--int8", action="store_true",
                     help="also write a dynamically quantised copy")
@@ -40,7 +42,16 @@ def main() -> int:
 
     out = Path(args.out or ROOT / "models" / f"{args.backbone}.onnx")
     torch_model = TorchEmbedder(args.backbone)
-    torch_model.export_onnx(out)
+    try:
+        torch_model.export_onnx(out)
+    except Exception as e:
+        # MobileCLIP's reparameterisable blocks do not all survive tracing.  Say
+        # so plainly: an encoder that cannot be exported cannot ship to the Pi,
+        # which is a finding about the encoder, not a broken script.
+        print(f"  {args.backbone}: ONNX export failed - {type(e).__name__}: {str(e)[:200]}")
+        print("  the research harness can still time it under torch "
+              "(research/bench.py falls back), but the till cannot run it")
+        return 1
     print(f"  {rel(out)}  {out.stat().st_size / 1e6:.1f} MB  dim={torch_model.dim}")
 
     if args.int8:

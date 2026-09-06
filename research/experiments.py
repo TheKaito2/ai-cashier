@@ -25,6 +25,8 @@ from recognition.fusion import (FusionConfig, SkuPrior, Status, basket_tolerance
 from recognition.gallery import PcaWhitening, SkuGallery
 from recognition.proposer import BackgroundSubtractionProposer
 from research.dataset import ROOT, Sku, Source, Split, make_split
+from server.services.escalation import (EscalationPolicy, Trigger, decide,
+                                        value_at_risk_for_swap)
 
 # how many views enrol a product by default. 5 is what the till's dialog asks for.
 DEFAULT_K = 5
@@ -491,9 +493,92 @@ def e6_fusion(source: Source, embedder, proposer, split: Split,
             "false_alarm_rate": false_alarms / honest if honest else float("nan"),
             "n_swaps": attempts})
 
+    escalation_rows = _escalation_sweep(skus, priors, ids, rng, weight_noise_g)
+
     return {"experiment": "E6", "source": source.name,
             "backbone": getattr(embedder, "name", "?"),
-            "identification": rows, "item_swap": swap_rows}
+            "identification": rows, "item_swap": swap_rows,
+            "escalation": escalation_rows}
+
+
+#: the tolerance the till ships with; the sweep over it is the adjacent table
+ESCALATION_K_SIGMA = 3.0
+
+
+def _escalation_sweep(skus, priors, ids, rng, weight_noise_g,
+                      k_sigma: float = ESCALATION_K_SIGMA) -> list[dict]:
+    """What the shop's escalation threshold actually buys, in both directions.
+
+    `server/services/escalation.py` decides whether a discrepancy is worth
+    fetching a person for, and the shop sets that line in baht.  The default is
+    100 and nothing measured it - this is the measurement.
+
+    Two numbers per threshold, and they pull against each other.  How many item
+    swaps reach a supervisor is the security side.  How many *honest* baskets
+    reach one, per thousand transactions, is what the shop actually pays: an
+    unattended till that cries wolf gets ignored, and most self-checkout loss is
+    accidental rather than malicious to begin with (docs/research/03, M19/M20).
+
+    The weight tolerance is held at the shipped `k_sigma`; sweeping it as well
+    would make a twenty-row table that answers two questions at once.  The
+    thresholds follow the catalogue's own price quantiles rather than a fixed
+    baht ladder, so the sweep still says something on a set of THB-20 crisps and
+    on a shelf of spirits.
+
+    The decision itself comes from the shipped policy, not a copy of it: if the
+    till changes its mind about when to call somebody, this table moves with it.
+    """
+    prices = sorted(s.price for s in (skus[i] for i in ids) if s.price)
+    if not prices:
+        return []
+    quantiles = sorted({round(float(np.quantile(prices, q)), 2)
+                        for q in (0.0, 0.25, 0.5, 0.75, 1.0)})
+
+    # Weigh every basket once, then apply each threshold to the same
+    # measurements.  Drawing fresh noise per threshold would make the rows
+    # differ by luck as well as by policy, and the swap-detection column - which
+    # depends only on the tolerance - would wander between rows that are
+    # supposed to be identical in it.
+    swaps: list[tuple[float, bool]] = []       # (value at risk, was it noticed)
+    honest_baskets: list[tuple[float, bool]] = []
+    for a in ids:
+        if skus[a].weight_g is None:
+            continue
+        at_risk = value_at_risk_for_swap([skus[a].price])
+        for b in ids:
+            if a == b or skus[b].weight_g is None:
+                continue
+            check = verify_basket(priors, {a: 1},
+                                  skus[b].weight_g + rng.normal(0, weight_noise_g),
+                                  k_sigma=k_sigma)
+            if check is not None:
+                swaps.append((at_risk, not check.ok))
+        honest_check = verify_basket(
+            priors, {a: 1}, skus[a].weight_g + rng.normal(0, weight_noise_g),
+            k_sigma=k_sigma)
+        if honest_check is not None:
+            honest_baskets.append((at_risk, not honest_check.ok))
+
+    if not swaps or not honest_baskets:
+        return []
+
+    out = []
+    for threshold in quantiles:
+        policy = EscalationPolicy(enabled=True, supervise_above_baht=threshold)
+
+        def calls(at_risk: float) -> bool:
+            return decide(Trigger.WEIGHT_MISMATCH, at_risk, policy).calls_a_person
+
+        caught = [v for v, noticed in swaps if noticed]
+        false_alarms = [v for v, noticed in honest_baskets if noticed]
+        out.append({
+            "supervise_above_baht": threshold,
+            "k_sigma": k_sigma,
+            "swaps_caught_pct": 100.0 * len(caught) / len(swaps),
+            "swaps_escalated_pct": 100.0 * sum(map(calls, caught)) / len(swaps),
+            "false_calls_per_1000": 1000.0 * sum(map(calls, false_alarms)) / len(honest_baskets),
+            "n_swaps": len(swaps), "n_honest": len(honest_baskets)})
+    return out
 
 
 # ------------------------------------------------------------------------- E7

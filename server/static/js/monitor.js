@@ -18,6 +18,8 @@
                                     : e.expected_g != null ? `weight mismatch overridden · expected ${Math.round(e.expected_g)} g, pan ${Math.round(e.measured_g)} g`
                                     : 'staff override';
             case 'basket_check': return (e.ok ? 'weight ok' : 'WEIGHT MISMATCH') + ` · expected ${Math.round(e.expected_g)} g, pan ${Math.round(e.measured_g)} g`;
+            case 'walk_away':    return `unpaid goods left the mat · ${baht(e.value_at_risk || 0)} at risk · ${esc(e.response || '')}`;
+            case 'supervisor_called': return `staff called · ${esc(e.reason || e.trigger || '')}`;
             default:             return esc(e.kind);
         }
     }
@@ -67,6 +69,17 @@
         Charts.bars($('kindsChart'), Object.entries(counts).map(([k, v]) => ({
             label: k.replace('_', ' '), value: v, cls: KIND[k] === 'warn' ? 'bar--warn' : '' })));
         Charts.columns($('abstainChart'), Charts.byDay(events.filter(e => e.kind === 'abstention'), 14, () => 1), { height: 150 });
+
+        // a call for staff is the one event somebody has to act on, so it does
+        // not wait its turn in a list of two hundred
+        const called = events.find(e => e.kind === 'supervisor_called');
+        const banner = $('needsStaff');
+        if (called) {
+            banner.hidden = false;
+            banner.innerHTML = `<strong>Staff needed at the till</strong> · ${describe(called)} · ${when(called.timestamp)}`;
+        } else {
+            banner.hidden = true;
+        }
 
         const list = $('events');
         list.innerHTML = events.length ? events.slice(0, 14).map(e =>

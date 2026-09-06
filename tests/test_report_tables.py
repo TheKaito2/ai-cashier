@@ -99,3 +99,42 @@ def test_generated_tables_say_they_are_generated(name, tmp_path, monkeypatch):
     monkeypatch.setattr(report, "TABLES", tmp_path)
     report.write(name, report.header({"source": "captures"}) + "body")
     assert (tmp_path / f"{name}.tex").read_text().startswith("% GENERATED")
+
+
+# ------------------------------------------------------ the escalation table
+
+def _e6_with_escalation() -> dict:
+    return {"experiment": "E6", "source": "captures", "backbone": "b",
+            "identification": [], "item_swap": [],
+            "escalation": [
+                {"supervise_above_baht": 0.0, "k_sigma": 3.0, "swaps_caught_pct": 82.0,
+                 "swaps_escalated_pct": 82.0, "false_calls_per_1000": 41.0,
+                 "n_swaps": 100, "n_honest": 50},
+                {"supervise_above_baht": 250.0, "k_sigma": 3.0, "swaps_caught_pct": 82.0,
+                 "swaps_escalated_pct": 12.0, "false_calls_per_1000": 4.0,
+                 "n_swaps": 100, "n_honest": 50}]}
+
+
+def test_the_escalation_table_shows_what_the_shop_pays_for_the_security(tmp_path, monkeypatch):
+    monkeypatch.setattr(report, "RESULTS", tmp_path / "results")
+    monkeypatch.setattr(report, "TABLES", tmp_path / "tables")
+    report.RESULTS.mkdir()
+    (report.RESULTS / "E6.json").write_text(json.dumps(_e6_with_escalation()))
+
+    report.table_e6_escalation()
+
+    text = (report.TABLES / "e6_escalation.tex").read_text()
+    assert "Honest baskets escalated" in text, "the nuisance column is the point of the table"
+    assert "250" in text and "12.0" in text
+    assert "\\label{tab:escalation}" in text
+
+
+def test_an_e6_from_before_the_escalation_sweep_writes_no_table(tmp_path, monkeypatch):
+    """Old result files have no escalation block; that is not an error."""
+    monkeypatch.setattr(report, "RESULTS", tmp_path / "results")
+    monkeypatch.setattr(report, "TABLES", tmp_path / "tables")
+    report.RESULTS.mkdir()
+    (report.RESULTS / "E6.json").write_text(json.dumps(
+        {"experiment": "E6", "source": "synthetic", "identification": [], "item_swap": []}))
+    report.table_e6_escalation()
+    assert not report.TABLES.exists()

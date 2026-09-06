@@ -58,14 +58,22 @@ class TorchEmbedder:
     #: encoders competitive with far larger models (docs/research/05, P27),
     #: so they are the E3 rows worth adding.  DINOv3 distilled weights are
     #: gated at time of writing; DINOv2-S/14 is the public stand-in.
-    #: name -> (open_clip model, pretrained tag, dim, mean, std)
+    #:
+    #: The S-variants and the MobileCLIP2 family are the ones small enough to
+    #: plausibly run on a Pi, which is the whole question E3 exists to answer.
+    #:
+    #: Embedding width and input resolution are NOT listed here: they are read
+    #: from open_clip's own model config at load time.  Writing them by hand
+    #: means two more numbers that can drift, and getting the resolution wrong
+    #: is silent - the model still runs, just worse than it should, which reads
+    #: as "this encoder is weak" instead of "we fed it the wrong size".
+    #: name -> (open_clip model, pretrained tag, mean, std)
     CLIP_BACKBONES = {
-        "mobileclip_b":  ("MobileCLIP-B",       "datacompdr",  512,
-                          (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        "mobileclip_s1": ("MobileCLIP-S1",      "datacompdr",  512,
-                          (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
-        "siglip_b16":    ("ViT-B-16-SigLIP",    "webli",       768,
-                          (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        "mobileclip_b":   ("MobileCLIP-B",    "datacompdr", (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        "mobileclip_s1":  ("MobileCLIP-S1",   "datacompdr", (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        "mobileclip_s2":  ("MobileCLIP-S2",   "datacompdr", (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        "mobileclip2_s0": ("MobileCLIP2-S0",  "dfndr2b",    (0.0, 0.0, 0.0), (1.0, 1.0, 1.0)),
+        "siglip_b16":     ("ViT-B-16-SigLIP", "webli",      (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     }
     HUB_BACKBONES = {
         "dinov2_vits14": ("facebookresearch/dinov2", "dinov2_vits14", 384),
@@ -78,6 +86,8 @@ class TorchEmbedder:
         self.name = backbone
         self._torch = torch
         self.mean, self.std = MEAN, STD
+        #: every torchvision trunk here wants 224; a CLIP encoder may not
+        self.input = INPUT
 
         if backbone in self.CLIP_BACKBONES:
             self._load_open_clip(backbone)
@@ -101,7 +111,13 @@ class TorchEmbedder:
 
     def _load_open_clip(self, backbone: str) -> None:
         import open_clip
-        arch, tag, self.dim, mean, std = self.CLIP_BACKBONES[backbone]
+        arch, tag, mean, std = self.CLIP_BACKBONES[backbone]
+        config = open_clip.get_model_config(arch) or {}
+        self.dim = int(config.get("embed_dim", 512))
+        # MobileCLIP-S1/S2 and the MobileCLIP2 family are trained at 256, not
+        # 224.  Resizing to the wrong one costs accuracy without erroring.
+        size = (config.get("vision_cfg") or {}).get("image_size", INPUT)
+        self.input = int(size[0] if isinstance(size, (list, tuple)) else size)
         model, _, _ = open_clip.create_model_and_transforms(arch, pretrained=tag)
         self.mean, self.std = np.array(mean, np.float32), np.array(std, np.float32)
 
@@ -128,7 +144,9 @@ class TorchEmbedder:
     def embed(self, crops: list[np.ndarray]) -> np.ndarray:
         if not crops:
             return np.zeros((0, self.dim), dtype=np.float32)
-        x = self._torch.from_numpy(preprocess(crops, mean=self.mean, std=self.std)).to(self.device)
+        x = self._torch.from_numpy(
+            preprocess(crops, size=self.input, mean=self.mean, std=self.std)
+        ).to(self.device)
         with self._torch.no_grad():
             out = self.net(x)
         return out.detach().cpu().numpy().astype(np.float32)
@@ -137,7 +155,7 @@ class TorchEmbedder:
         """Freeze to ONNX so the Pi never has to import torch."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        dummy = self._torch.zeros(1, 3, INPUT, INPUT, device=self.device)
+        dummy = self._torch.zeros(1, 3, self.input, self.input, device=self.device)
         self._torch.onnx.export(
             self.net, dummy, str(path),
             input_names=["images"], output_names=["embedding"],
@@ -153,10 +171,15 @@ class OnnxEmbedder:
         import onnxruntime as ort
         self.session = ort.InferenceSession(
             str(path), providers=providers or ["CPUExecutionProvider"])
-        self._input = self.session.get_inputs()[0].name
+        spec = self.session.get_inputs()[0]
+        self._input = spec.name
+        # an encoder exported from a 256-pixel model wants 256-pixel crops; the
+        # graph knows, so ask it rather than assuming the till's usual 224
+        side = spec.shape[-1]
+        self.input = int(side) if isinstance(side, int) else INPUT
         dim = self.session.get_outputs()[0].shape[-1]
         if not isinstance(dim, int):          # quantised graphs carry a symbolic dim
-            probe = np.zeros((1, 3, INPUT, INPUT), np.float32)
+            probe = np.zeros((1, 3, self.input, self.input), np.float32)
             dim = self.session.run(None, {self._input: probe})[0].shape[-1]
         self.dim = int(dim)
         self.name = Path(path).stem
@@ -164,5 +187,5 @@ class OnnxEmbedder:
     def embed(self, crops: list[np.ndarray]) -> np.ndarray:
         if not crops:
             return np.zeros((0, self.dim), dtype=np.float32)
-        out = self.session.run(None, {self._input: preprocess(crops)})[0]
+        out = self.session.run(None, {self._input: preprocess(crops, size=self.input)})[0]
         return np.asarray(out, dtype=np.float32)

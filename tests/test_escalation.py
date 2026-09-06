@@ -105,3 +105,46 @@ def test_the_reason_says_what_happened_in_words_a_shopkeeper_can_read():
     e = decide(Trigger.WALK_AWAY, 250.0, ON)
     assert "unpaid" in e.reason and "250" in e.reason
     assert isinstance(e, Escalation) and "walk_away" in str(e)
+
+
+# ------------------------------------- the experiment that measures the line
+
+def test_the_sweep_reports_detection_as_constant_and_only_escalation_moving():
+    """Raising the baht line changes who is called, not what is detected.
+
+    If the detection column wanders between rows, the sweep is drawing fresh
+    noise per threshold and the rows differ by luck as well as by policy.
+    """
+    from research.experiments import _escalation_sweep
+    import numpy as np
+    from research.dataset import Sku
+    from recognition.fusion import SkuPrior
+
+    ids = ["cheap", "middling", "dear"]
+    skus = {"cheap": Sku("cheap", "Cheap", 10.0, 50.0),
+            "middling": Sku("middling", "Middling", 90.0, 120.0),
+            "dear": Sku("dear", "Dear", 600.0, 300.0)}
+    priors = {i: SkuPrior(sku_id=i, weight_g=skus[i].weight_g) for i in ids}
+
+    rows = _escalation_sweep(skus, priors, ids, np.random.default_rng(0), 3.0)
+
+    assert len(rows) >= 2
+    assert len({r["swaps_caught_pct"] for r in rows}) == 1, \
+        "detection depends on the tolerance, not on the baht line"
+    escalated = [r["swaps_escalated_pct"] for r in rows]
+    assert escalated == sorted(escalated, reverse=True), \
+        "asking for a higher value at risk cannot call more people"
+    assert all(r["swaps_escalated_pct"] <= r["swaps_caught_pct"] for r in rows), \
+        "a swap cannot be escalated without first being caught"
+
+
+def test_a_catalogue_with_no_prices_produces_no_curve_rather_than_a_fake_one():
+    from research.experiments import _escalation_sweep
+    import numpy as np
+    from research.dataset import Sku
+    from recognition.fusion import SkuPrior
+
+    ids = ["a", "b"]
+    skus = {i: Sku(i, i, 0.0, 50.0) for i in ids}
+    priors = {i: SkuPrior(sku_id=i, weight_g=50.0) for i in ids}
+    assert _escalation_sweep(skus, priors, ids, np.random.default_rng(0), 3.0) == []

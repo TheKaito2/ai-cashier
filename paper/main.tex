@@ -269,6 +269,7 @@ fusion ablation and item-swap detection (E6); end-to-end basket pricing error
 \input{tables/e5_openset}
 \input{tables/e6_fusion}
 \input{tables/e6_swap}
+\input{tables/e6_escalation}
 \input{tables/e7_basket}
 \input{tables/e8_enrolment}
 \input{tables/e9_public}
@@ -325,6 +326,23 @@ half of.
 \todo{write the rest of this section only after research/run.py --source captures. Every
 table above regenerates from the results; do not type numbers into the prose
 that are not in a table.}
+
+\paragraph{When an unattended till should fetch a person.} A till with nobody
+standing at it has to answer a discrepancy on its own, and the useful question is
+not whether it can detect a swap but what it should \emph{do} about one.
+Table~\ref{tab:escalation} sweeps the value at risk at the shipped weight
+tolerance. Detection is constant down the column --- it depends on the tolerance,
+not on the price --- so what the sweep isolates is the cost of the response:
+raising the line hands more discrepancies back to the customer to resolve and
+fewer to staff, and the last column is the bill for the one before it, in honest
+baskets interrupted per thousand. Setting that line is therefore an economic
+decision rather than a matter of taste, and it is one no commercial system
+publishes, because publishing it means publishing a false-alarm rate. We report
+ours. The till never acts on a customer physically: the responses are a prompt,
+holding the sale, and calling a member of staff, and the reasoning for stopping
+there is in Section~\ref{sec:method}'s abstention argument --- most self-checkout
+loss is accidental~\cite{beck2018sco,taylor2016swipers}, so most of what a stricter line would catch is
+an honest mistake.
 
 \paragraph{Enrolment without capture.} The \emph{iconic} rows enrol each product
 from the manufacturer's own product image before any shelf photograph, so $k=1$

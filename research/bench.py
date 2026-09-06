@@ -24,7 +24,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from recognition.embedder import OnnxEmbedder                    # noqa: E402
+from recognition.embedder import OnnxEmbedder, TorchEmbedder     # noqa: E402
 from recognition.gallery import SkuGallery                       # noqa: E402
 from recognition.metrology import MatMetrology                   # noqa: E402
 from recognition.pipeline import RecognitionPipeline             # noqa: E402
@@ -71,7 +71,15 @@ def main() -> int:
     background = empty_mat()
     frame = scene(skus, seed=7)
 
-    embedder = OnnxEmbedder(ROOT / "models" / f"{args.backbone}.onnx")
+    # ONNX is what the till runs, so it is what should be timed.  A research
+    # encoder that has not been exported yet is still worth a number - but the
+    # runtime is recorded so a torch figure is never quoted as a till figure.
+    onnx = ROOT / "models" / f"{args.backbone}.onnx"
+    if onnx.exists():
+        embedder = OnnxEmbedder(onnx)
+    else:
+        print(f"  {onnx.name} not found - timing {args.backbone} under torch instead")
+        embedder = TorchEmbedder(args.backbone)
     proposer = BackgroundSubtractionProposer()
     proposer.calibrate(background)
     gallery = SkuGallery(embedder.dim)
@@ -113,6 +121,8 @@ def main() -> int:
     fps = 1000.0 / stages["full_frame_settled"]["mean_ms"]
     out = {
         "backbone": args.backbone, "items_on_mat": len(crops),
+        "runtime": type(embedder).__name__.replace("Embedder", "").lower(),
+        "input_px": getattr(embedder, "input", None),
         "frame_size": list(frame.shape[:2]),
         "machine": {"platform": platform.platform(), "machine": platform.machine(),
                     "processor": platform.processor(), "python": platform.python_version()},
@@ -129,6 +139,9 @@ def main() -> int:
     for name, s in stages.items():
         print(f"  {name:<24}{s['mean_ms']:>8.1f}{s['median_ms']:>9.1f}{s['p95_ms']:>9.1f}   ms")
     print(f"\n  sustained: {fps:.1f} FPS once tracks have settled")
+    if out["runtime"] != "onnx":
+        print(f"\n  NOTE: timed under {out['runtime']}, not ONNX Runtime. The till runs ONNX; "
+              "export with tools/export_embedder.py before comparing against a shipped model.")
     if out["cpu_temperature_c_start"] is None:
         print("\n  NOTE: no CPU temperature available - this is not a Raspberry Pi. "
               "Do not quote these numbers as Pi figures.")

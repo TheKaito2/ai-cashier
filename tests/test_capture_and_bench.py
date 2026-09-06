@@ -147,3 +147,54 @@ def test_the_scale_tools_run_without_a_load_cell_attached(script, tmp_path):
     done = subprocess.run(args, cwd=ROOT, capture_output=True, text=True,
                           input="\n\n\n\n", timeout=120)
     assert done.returncode == 0, done.stderr[-2000:]
+
+
+# --------------------------------------------------------- the demo seeder
+
+def test_seeding_a_demo_writes_to_the_shop_folder_not_the_repository(tmp_path, monkeypatch):
+    """`tools/seed_demo.py` used to write the mat and the gallery straight into
+    the repository's `data/`, while the database followed `AI_CASHIER_DATA`.
+    A packaged till therefore seeded a demo it could not afterwards find - and
+    the script could not be tested at all without overwriting the real shop.
+    """
+    import paths
+    import server.services.database as database
+    import tools.seed_demo as seed
+
+    monkeypatch.setenv("AI_CASHIER_DATA", str(tmp_path))
+    monkeypatch.setattr(database, "DEFAULT_DB", tmp_path / "checkout.sqlite3")
+    # the demo frame is a tracked source asset; a test must not rewrite it
+    monkeypatch.setattr(paths, "DEMO_FRAME", tmp_path / "demo_frame.jpg")
+
+    assert seed.main() == 0
+
+    assert paths.mat_path().parent == tmp_path
+    assert (tmp_path / "mat_background.png").exists(), "the mat was written somewhere else"
+    assert (tmp_path / "gallery.npz").exists(), "the gallery was written somewhere else"
+
+    db = database.Database(tmp_path / "checkout.sqlite3")
+    assert db.get_settings()["reject_below_cosine"] > 0, "no threshold was written"
+    # the held-back product is deliberately in neither the catalogue nor the
+    # gallery: it is a physical packet a judge is handed to enrol live
+    assert seed.HOLD_BACK not in {p["id"] for p in db.get_products()}
+    assert db.get_products(), "the demo shop has no products at all"
+
+
+def test_the_demo_keeps_one_product_out_of_the_gallery(tmp_path, monkeypatch):
+    """Something has to be left un-enrolled, or the unknown-item path and live
+    enrolment cannot be shown to anybody."""
+    import numpy as np
+    import paths
+    import server.services.database as database
+    import tools.seed_demo as seed
+    from recognition.gallery import SkuGallery
+
+    monkeypatch.setenv("AI_CASHIER_DATA", str(tmp_path))
+    monkeypatch.setattr(database, "DEFAULT_DB", tmp_path / "checkout.sqlite3")
+    monkeypatch.setattr(paths, "DEMO_FRAME", tmp_path / "demo_frame.jpg")
+    seed.main()
+
+    gallery = SkuGallery.load(tmp_path / "gallery.npz")
+    assert seed.HOLD_BACK not in gallery.skus
+    assert len(gallery.skus) >= 4, "the centre only freezes once four products are enrolled"
+    assert gallery.frozen, "a demo gallery that never froze would drift as a judge enrols"

@@ -87,6 +87,17 @@ git clone --depth 1 https://github.com/marcusklasson/GroceryStoreDataset researc
 python research/prepare_grocerystore.py --dataset research/data/public/GroceryStoreDataset --out research/data/public
 ```
 
+## Reproduce every table and figure
+
+```bash
+python tools/reproduce.py --list     # provenance of what is already there
+python tools/reproduce.py            # synthetic runs, then all the tables
+```
+
+This is the command to hand a reviewer.  It refuses to run when a result came
+from `captures`, so a synthetic run can never quietly replace a measured one, and
+it prints which rows are synthetic and which came from the public benchmark.
+
 ## Set the threshold
 
 After a real E5 run, and only then:

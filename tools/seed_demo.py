@@ -17,9 +17,10 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+import paths                                               # noqa: E402
 from recognition.calibration import pick_threshold          # noqa: E402
 from recognition.embedder import OnnxEmbedder               # noqa: E402
-from recognition.gallery import SkuGallery                  # noqa: E402
+from recognition.gallery import MIN_SKUS_TO_FREEZE, SkuGallery   # noqa: E402
 from recognition.pipeline import RecognitionPipeline        # noqa: E402
 from recognition.proposer import BackgroundSubtractionProposer  # noqa: E402
 from server.services.database import Database               # noqa: E402
@@ -35,15 +36,19 @@ CATEGORY = {"pepsi": "drinks", "crystal-water": "drinks"}
 
 
 def main() -> int:
-    data = ROOT / "data"
-    data.mkdir(exist_ok=True)
+    # the mat and the gallery belong beside the database, wherever that is:
+    # a checkout's data/, %LOCALAPPDATA% in a frozen build, or AI_CASHIER_DATA
+    # in a test.  Writing them to the repository instead meant a packaged till
+    # seeded a demo it could not then find.
+    paths.data_dir().mkdir(parents=True, exist_ok=True)
 
     mat = empty_mat()
-    cv2.imwrite(str(data / "mat_background.png"), mat)
-    cv2.imwrite(str(ROOT / "docs" / "assets" / "demo_frame.jpg"),
+    cv2.imwrite(str(paths.mat_path()), mat)
+    # the demo frame is a source asset, bundled by the installer, not shop data
+    cv2.imwrite(str(paths.DEMO_FRAME),
                 scene(["lays-flat-original", "pepsi"], seed=42))
 
-    embedder = OnnxEmbedder(ROOT / "models" / "mobilenet_v3_small.onnx")
+    embedder = OnnxEmbedder(paths.EMBEDDER)
     proposer = BackgroundSubtractionProposer()
     proposer.calibrate(mat)
     pipe = RecognitionPipeline(proposer, embedder, SkuGallery(embedder.dim))
@@ -61,6 +66,15 @@ def main() -> int:
         })
         print(f"  enrolled {sku:<22} {n} views   {true_mass(sku):5.0f} g")
 
+    # Pin the centring reference before anything is scored against it, exactly
+    # as the till does once four products exist (docs/research/09, D7).  Without
+    # this the demo gallery still drifts: the first product a judge enrols live
+    # would move the centre and with it every score already measured - including
+    # the threshold picked immediately below.
+    if not pipe.gallery.frozen and len(pipe.gallery.skus) >= MIN_SKUS_TO_FREEZE:
+        pipe.gallery.freeze_centre()
+        print(f"\n  centre frozen over {len(pipe.gallery.skus)} products")
+
     # the threshold is measured, never guessed - same routine the real rig uses
     def top_score(sku, seed):
         frame = scene([sku], seed=seed)
@@ -73,7 +87,7 @@ def main() -> int:
     report = pick_threshold(known, unknown)
     db.set_setting("reject_below_cosine", round(report.threshold, 4))
 
-    pipe.gallery.save(data / "gallery.npz")
+    pipe.gallery.save(paths.gallery_path())
     print(f"\n  gallery  {len(pipe.gallery.skus)} products, {len(pipe.gallery)} views")
     print(f"  threshold {report}")
     print(f"  held back for the live-enrolment demo: {HOLD_BACK}")

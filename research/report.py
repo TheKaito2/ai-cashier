@@ -194,6 +194,24 @@ def table_e6() -> None:
         label="swap"))
 
 
+def table_e6_escalation() -> None:
+    r = load("E6")
+    if not r or not r.get("escalation"):
+        return
+    write("e6_escalation", latex_table(
+        r, [("supervise_above_baht", "Call staff above (THB)", ".0f"),
+            ("swaps_caught_pct", "Swaps caught (\\%)", ".1f"),
+            ("swaps_escalated_pct", "Swaps escalated to staff (\\%)", ".1f"),
+            ("false_calls_per_1000", "Honest baskets escalated (per 1000)", ".1f")],
+        r["escalation"],
+        caption=("Where an unattended till should call a person. The weight tolerance is "
+                 "held at the shipped $k_\\sigma$; only the value at risk varies. Raising "
+                 "the line leaves detection untouched and trades staff attention for "
+                 "unattended handling. The rightmost column is what the shop pays for the "
+                 "security in the one before it."),
+        label="escalation"))
+
+
 def table_e9() -> None:
     """One row per public dataset and k; the datasets come from E9-<tag>.json files."""
     results = [json.loads(p.read_text()) for p in sorted(RESULTS.glob("E9*.json"))]
@@ -334,8 +352,8 @@ def main() -> int:
         return 1
     sources = {json.loads(p.read_text()).get("source") for p in RESULTS.glob("*.json")}
     print(f"regenerating from results in {sources}\n")
-    for fn in (table_e1, table_e2, table_e3, table_e4, table_e5, table_e6, table_e7,
-               table_e8, table_e9):
+    for fn in (table_e1, table_e2, table_e3, table_e4, table_e5, table_e6,
+               table_e6_escalation, table_e7, table_e8, table_e9):
         fn()
     figures()
     if "synthetic" in sources:
