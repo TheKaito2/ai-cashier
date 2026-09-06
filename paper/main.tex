@@ -326,6 +326,19 @@ half of.
 table above regenerates from the results; do not type numbers into the prose
 that are not in a table.}
 
+\paragraph{Enrolment without capture.} The \emph{iconic} rows enrol each product
+from the manufacturer's own product image before any shelf photograph, so $k=1$
+on those rows is enrolment with no capture at all. With the ImageNet trunk that
+setting is the worst in the table; with the CLIP-class encoder it is among the
+best, beating the same encoder enrolled from a single real photograph and
+matching it at five. A canonical, evenly-lit product image is a better single
+reference than one arbitrary photograph of a shelf, and a representation trained
+on web image--text pairs is the thing that can exploit it. If this transfers to
+the rig it removes the capture step from enrolment entirely for any product whose
+manufacturer publishes an image --- which changes the operator cost the paper
+measures in E8, and is the reason that experiment reports operator seconds
+separately from compute seconds.
+
 \section{Limitations}
 
 \paragraph{Benchmark transfer.} The public rows are shelf photographs, not mat

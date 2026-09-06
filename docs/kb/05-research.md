@@ -104,6 +104,8 @@ other.  Scored on the unseen half only.  Numbers below are read off
 | all 81 | 40 | dinov2_vits14 | 62.7 | 75.0 | 73.3 |
 | all 81 | 40 | **mobileclip_b** | **72.1** | 83.9 | 81.4 |
 | iconic-first | 40 | mobilenet_v3_small | 29.8 | 59.8 | 62.8 |
+| iconic-first | 40 | dinov2_vits14 | 54.0 | 72.5 | 74.2 |
+| iconic-first | 40 | **mobileclip_b** | **82.9** | 83.2 | 81.7 |
 
 **Abstention, max-cosine rule:**
 
@@ -115,6 +117,9 @@ other.  Scored on the unseen half only.  Numbers below are read off
 | all 81 | mobilenet_v3_small | 0.365 | 0.986 |
 | all 81 | dinov2_vits14 | 0.662 | 0.811 |
 | all 81 | **mobileclip_b** | 0.837 | 0.621 |
+| iconic-first | mobilenet_v3_small | 0.401 | 0.975 |
+| iconic-first | dinov2_vits14 | 0.727 | 0.732 |
+| iconic-first | **mobileclip_b** | 0.842 | 0.596 |
 
 Five things this says, and they are why the experiment was worth running:
 
@@ -137,10 +142,21 @@ Five things this says, and they are why the experiment was worth running:
 4. **More views is not monotonic.**  Nearest-view scoring peaks at k=3 and dips
    at k=5 on several rows, while prototype-mean scoring keeps climbing.  A fifth
    shelf photograph adds as much noise as signal to nearest-view scoring.
-5. **Zero-capture enrolment is not free but is not hopeless.**  Enrolling from
-   the manufacturer pack shot alone gives 29.8 % on the old trunk; four real
-   photographs after it take that to 62.8 %.  The seed of Tier 2 question 3 in
-   `docs/research/07-research-roadmap.md`.
+5. **Zero-capture enrolment works, given the right encoder — and this is the
+   largest result here.**  Enrolling a product from the manufacturer's pack shot
+   and nothing else gives **82.9 %** top-1 with MobileCLIP-B.  Three things about
+   that number.  It beats the same encoder enrolled from *one real shelf
+   photograph* (72.1 %), because a clean canonical product image is a better
+   single reference than one arbitrary photograph of a shelf.  It essentially
+   matches the same encoder given **five** real photographs (81.7 %), so four
+   further captures buy nothing once the pack shot is there.  And on the old
+   ImageNet trunk the same setup gives 29.8 %, which is useless — so this is not
+   a property of the method, it is a property of the encoder.
+
+   If it holds on the rig, a shop enrols a product from the manufacturer's web
+   image with no photography at all.  That is Tier 2 question 3 in
+   `docs/research/07-research-roadmap.md`, answered on a public benchmark, and it
+   is a stronger claim than the encoder swap that produced it.
 
 **What this does not say.**  These are shelf photographs under supermarket
 lighting, not mat crops under a ring light, and MobileCLIP-B is a ViT-B — an

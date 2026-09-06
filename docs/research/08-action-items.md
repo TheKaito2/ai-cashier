@@ -58,4 +58,6 @@ Each item names the file, the change, the effort, and the dossier section it com
 
 | 40 | The winning encoder is a ViT-B measured on a laptop; the till runs a MobileNetV3 on a Pi 5.  Nothing yet says whether MobileCLIP-B (or its distilled S1/S2 variants) holds an interactive frame budget on the target hardware, so the E9 result bounds the representation rather than the deployed system | `research/bench.py`, `tools/export_embedder.py`, `tools/export_coreml.py` | X17, paper Limitations | open: needs no products, only the Pi |
 
+| 41 | **Zero-capture enrolment measured, and it works.**  Enrolling from the manufacturer pack shot alone reaches 82.9 % top-1 with MobileCLIP-B — better than one real photograph, equal to five, against 29.8 % on the frozen ImageNet trunk.  Tier 2 question 3 answered on a public benchmark; whether it transfers to the rig is the open half | `research/prepare_grocerystore.py`, `research/experiments.py`, `paper/main.tex` | 07 Tier 2 Q3, X20 | done on public data 6 Sep 2026; needs the capture session to confirm on the rig |
+
 Items 1–3 change what the project may legally claim. Items 4–7 turn a demo till into something a Thai shop could switch on. Items 8–11 are what a reviewer will ask for. Items 13–16 protect the master's/PhD path.
