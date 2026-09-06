@@ -42,8 +42,8 @@ def test_a_missing_value_is_a_dash_rather_than_a_guess():
     assert "\\label{tab:l}" in text
 
 
-def _e9(tag: str, accuracy: float) -> dict:
-    return {"experiment": "E9", "source": f"folder:{tag}", "backbone": "b", "k": 5,
+def _e9(tag: str, accuracy: float, backbone: str = "mobilenet_v3_small") -> dict:
+    return {"experiment": "E9", "source": f"folder:{tag}", "backbone": backbone, "k": 5,
             "n_skus": 3,
             "fewshot": [{"k": 1, "accuracy": accuracy, "accuracy_prototype": accuracy,
                          "n_probes": 10, "n_skus": 3}],
@@ -64,6 +64,26 @@ def test_every_public_run_becomes_a_row_whatever_its_tag(tmp_path, monkeypatch):
     assert "packages" in public and "all" in public
     assert "50.0" in public and "25.0" in public
     assert (report.TABLES / "e9_public_openset.tex").exists()
+
+
+def test_the_same_dataset_under_two_encoders_stays_two_readable_rows(tmp_path, monkeypatch):
+    """Without an encoder column the table shows one dataset with two different
+    accuracies and explains neither."""
+    monkeypatch.setattr(report, "RESULTS", tmp_path / "results")
+    monkeypatch.setattr(report, "TABLES", tmp_path / "tables")
+    report.RESULTS.mkdir()
+    (report.RESULTS / "E9-packages.json").write_text(
+        json.dumps(_e9("grocerystore-packages", 0.458)))
+    (report.RESULTS / "E9-packages-mobileclip_b.json").write_text(
+        json.dumps(_e9("grocerystore-packages", 0.896, backbone="mobileclip_b")))
+
+    report.table_e9()
+
+    public = (report.TABLES / "e9_public.tex").read_text()
+    assert "Encoder" in public
+    assert "mobileclip\\_b" in public, "the encoder name must survive LaTeX escaping"
+    assert "45.8" in public and "89.6" in public
+    assert "Encoder" in (report.TABLES / "e9_public_openset.tex").read_text()
 
 
 def test_no_results_writes_no_table(tmp_path, monkeypatch):

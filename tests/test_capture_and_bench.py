@@ -135,12 +135,13 @@ def test_a_machine_without_a_thermal_sensor_says_nothing_rather_than_zero():
 # ------------------------------------------------------------- operator CLIs
 
 @pytest.mark.parametrize("script", ["tools/calibrate_scale.py", "tools/scale_drift.py"])
-def test_the_scale_tools_run_without_a_load_cell_attached(script):
+def test_the_scale_tools_run_without_a_load_cell_attached(script, tmp_path):
     args = [sys.executable, str(ROOT / script), "--dry-run"]
     if script.endswith("calibrate_scale.py"):
         args += ["--known-mass", "100"]
     else:
-        args += ["--minutes", "0"]
+        # --out defaults into research/results/; a test must not write there
+        args += ["--minutes", "0", "--out", str(tmp_path / "drift.csv")]
     # calibration is a two-point procedure: it asks the operator to clear the pan
     # and then to place the known mass, so it wants a person at a keyboard
     done = subprocess.run(args, cwd=ROOT, capture_output=True, text=True,

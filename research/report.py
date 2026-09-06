@@ -201,17 +201,26 @@ def table_e9() -> None:
         return
     rows, openset = [], []
     for r in results:
-        dataset = r["source"].split(":", 1)[-1]
+        # the same dataset is run under several encoders, so the row is only
+        # identified by both together - a table that dropped the backbone would
+        # show two different accuracies for one dataset and explain neither
+        dataset = r["source"].split(":", 1)[-1].replace("grocerystore-", "")
+        backbone = r.get("backbone", "?")
         for x in r["fewshot"]:
-            rows.append({"dataset": dataset, "k": x["k"], "accuracy_pct": x["accuracy"] * 100,
+            rows.append({"dataset": dataset, "backbone": backbone, "k": x["k"],
+                         "accuracy_pct": x["accuracy"] * 100,
                          "proto_pct": x["accuracy_prototype"] * 100,
                          "n_probes": x["n_probes"], "n_skus": x["n_skus"]})
         for rule, v in (r.get("openset", {}).get("scores") or {}).items():
-            openset.append({"dataset": dataset, "rule": rule, "auroc": v["auroc"],
+            openset.append({"dataset": dataset, "backbone": backbone, "rule": rule,
+                            "auroc": v["auroc"],
                             "fpr95": v["fpr_at_95_tpr"], "tau": v["threshold"]})
+    rows.sort(key=lambda x: (x["dataset"], x["backbone"], x["k"]))
+    openset.sort(key=lambda x: (x["dataset"], x["backbone"], x["rule"]))
     write("e9_public", latex_table(
         results[0],
-        [("dataset", "Dataset", ""), ("k", "$k$", ""), ("n_skus", "SKUs scored", "d"),
+        [("dataset", "Dataset", ""), ("backbone", "Encoder", ""), ("k", "$k$", ""),
+         ("n_skus", "SKUs scored", "d"),
          ("accuracy_pct", "Top-1 (\\%)", ".1f"), ("proto_pct", "Prototype (\\%)", ".1f"),
          ("n_probes", "Probes", "d")], rows,
         caption=("Few-shot accuracy on the Grocery Store dataset (whole photograph as the "
@@ -221,7 +230,8 @@ def table_e9() -> None:
     if openset:
         write("e9_public_openset", latex_table(
             results[0],
-            [("dataset", "Dataset", ""), ("rule", "Abstention rule", ""), ("auroc", "AUROC", ".3f"),
+            [("dataset", "Dataset", ""), ("backbone", "Encoder", ""),
+             ("rule", "Abstention rule", ""), ("auroc", "AUROC", ".3f"),
              ("fpr95", "FPR@95TPR", ".3f"), ("tau", "$\\tau$@95TPR", ".3f")], openset,
             caption="Open-set rejection on the Grocery Store dataset.", label="publicopenset"))
 
