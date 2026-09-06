@@ -64,14 +64,19 @@ specific to the machine that built it.
 ```
 graphify update .                    # after code changes; no API key needed
 graphify query "how does a frame become a cart line" --budget 2000
-graphify affected "SkuGallery"       # what breaks if this changes
-graphify path "MainWindow" "Database"
+graphify affected recognition_gallery_skugallery   # what breaks if this changes
+graphify explain recognition_pipeline_recognitionpipeline
 graphify god-nodes --top 20          # the architectural hubs
 ```
 
 `graphify-out/wiki/index.md` is the crawlable entry point; `graphify-out/GRAPH_REPORT.md`
 records the commit the graph was built from, so a stale graph is detectable with
 `git rev-parse HEAD`.
+
+Many symbols exist twice — once in Python and once in the Swift port — so a bare
+name is ambiguous and the tool says so.  Disambiguate with the node id: the file
+path and symbol, lowercased, with dots and slashes as underscores
+(`recognition/gallery.py` + `SkuGallery` → `recognition_gallery_skugallery`).
 
 Two limits worth knowing.  Community names come from hub symbols, not from a
 language model, because no `ANTHROPIC_API_KEY` is set on this machine — the graph

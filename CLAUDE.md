@@ -93,9 +93,15 @@ which is gitignored and regenerable.
 ```bash
 graphify update .                                  # after code changes
 graphify query "where is the rejection threshold read" --budget 2000
-graphify affected "SkuGallery"                     # what a change would touch
-graphify path "MainWindow" "Database"
+graphify affected recognition_gallery_skugallery   # what a change would touch
+graphify explain recognition_pipeline_recognitionpipeline
+graphify god-nodes --top 20
 ```
+
+Many symbols exist twice — once in Python and once in the Swift port — so a bare
+name is ambiguous and the tool says so.  Disambiguate with the node id: the file
+path and symbol, lowercased, with dots and slashes as underscores
+(`recognition/gallery.py` + `SkuGallery` → `recognition_gallery_skugallery`).
 
 `graphify-out/GRAPH_REPORT.md` names the commit it was built from; compare with
 `git rev-parse HEAD` to spot a stale graph.
