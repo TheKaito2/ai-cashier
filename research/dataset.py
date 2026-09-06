@@ -58,13 +58,22 @@ class SyntheticSource(Source):
         self._empty = empty_mat
         self.views_per_sku = views_per_sku
 
+    #: The rendered catalogue was drawn to mirror the version 1 products, and
+    #: these four carry an sku_id the seed catalogue maps to a class the version 1
+    #: detector actually knows (`yolo_class` in data/products.json). Marking them
+    #: is what lets E1's code path run at all without a capture session - the
+    #: numbers it then produces are synthetic like every other synthetic number.
+    LEGACY = frozenset({"lays-flat-original", "lays-ridged-original",
+                        "pepsi", "crystal-water"})
+
     def skus(self) -> list[Sku]:
         prices = {"lays-flat-original": 20.0, "lays-ridged-original": 22.0,
                   "tasto-seaweed": 24.0, "pepsi": 14.0, "crystal-water": 7.0,
                   "never-enrolled-snack": 18.0}
         return [Sku(sku_id=s, name=s.replace("-", " ").title(),
                     price=prices.get(s, 20.0), weight_g=spec[4],
-                    category="drinks" if s in ("pepsi", "crystal-water") else "chips")
+                    category="drinks" if s in ("pepsi", "crystal-water") else "chips",
+                    in_legacy_model=s in self.LEGACY)
                 for s, spec in self._catalogue.items()]
 
     def frames(self, sku_id: str) -> list[np.ndarray]:

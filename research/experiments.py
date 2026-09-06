@@ -6,13 +6,15 @@ into a table.  No number is ever typed into the paper by hand.
 Naming follows the plan: E1 closed-set baseline, E2 few-shot accuracy against k,
 E3 backbone against latency, E4 temporal voting, E5 open-set rejection,
 E6 multimodal fusion and item-swap detection, E7 end-to-end basket error,
-E8 the cost of adding a product.
+E8 the cost of adding a product, E9 the same measurements on a public dataset.
 """
 
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import asdict
+from pathlib import Path
 
 import numpy as np
 
@@ -26,6 +28,16 @@ from research.dataset import ROOT, Sku, Source, Split, make_split
 
 # how many views enrol a product by default. 5 is what the till's dialog asks for.
 DEFAULT_K = 5
+
+#: The version 1 detectors, six classes each. Kept out of everything the till
+#: imports; only E1 loads them, and only through research/ (NOTICE, and
+#: tests/test_no_ultralytics.py).
+LEGACY_WEIGHTS = (ROOT / "models" / "chips_model.pt", ROOT / "models" / "drinks_model.pt")
+
+#: The seed catalogue is where the class each product had under the version 3
+#: till is written down, in the `yolo_class` column. It is the only record of
+#: that mapping, so E1 reads it rather than guessing from the sku_id.
+LEGACY_CATALOGUE = ROOT / "data" / "products.json"
 
 
 # ------------------------------------------------------------------ machinery
@@ -46,6 +58,19 @@ def crop_views(source: Source, sku_id: str, proposer) -> list[np.ndarray]:
         if proposals:
             crops.append(max(proposals, key=lambda p: p.area_px).crop(frame))
     return crops
+
+
+def proposed_frames(source: Source, sku_id: str, proposer) -> list[np.ndarray]:
+    """The frames `crop_views` kept, in its order.
+
+    `embed_all` silently drops any frame the proposer found nothing in, so the
+    i-th embedding is not in general the i-th photograph.  Every other experiment
+    only ever touches the embeddings and cannot notice; E1 shows the same view to
+    a detector and to the embedder, so it has to.  The proposer runs twice per
+    frame to get this, which is a cheap price for the two indices meaning the
+    same thing.
+    """
+    return [f for f in source.frames(sku_id) if proposer.propose(f)]
 
 
 def embed_all(source: Source, embedder, proposer) -> dict[str, np.ndarray]:
@@ -100,6 +125,150 @@ def priors_for(skus: list[Sku], sizes: dict[str, tuple[float, float]] | None = N
     sizes = sizes or {}
     return {s.sku_id: SkuPrior(s.sku_id, weight_g=s.weight_g, size_mm=sizes.get(s.sku_id))
             for s in skus}
+
+
+# ------------------------------------------------------------------------- E1
+
+#: Below this the label space is small enough that the comparison measures which
+#: handful of products were photographed, not either method. Same reasoning as
+#: E5's floor, and the same refusal to print a number that reads like a result.
+MIN_LEGACY_SKUS = 4
+
+
+def legacy_class_to_sku(catalogue: Path = LEGACY_CATALOGUE) -> dict[str, str]:
+    """`yolo_class` -> `sku_id`, read from the version 3 seed catalogue.
+
+    Two products in that file carry a `yolo_class` no shipped detector knows;
+    they are simply absent from either model's class list and fall out here.
+    """
+    rows = json.loads(catalogue.read_text())["products"]
+    return {r["yolo_class"]: r["id"] for r in rows if r.get("yolo_class")}
+
+
+def load_legacy_detectors(weights=LEGACY_WEIGHTS) -> tuple[list, set[str]]:
+    """The version 1 detectors, and the union of the classes they know.
+
+    The union is by *name*: each detector numbers its own six classes 0..5, so
+    merging the index maps would silently leave one model's classes out.
+    """
+    from recognition.proposer import YoloProposer
+    detectors, classes = [], set()
+    for path in weights:
+        if not Path(path).exists():
+            raise FileNotFoundError(f"{path} - the version 1 weights are not in this checkout")
+        d = YoloProposer(str(path))
+        detectors.append(d)
+        classes.update(d.class_names.values())
+    return detectors, classes
+
+
+def e1_closed_set_baseline(source: Source, embedder, proposer, split: Split,
+                           k: int = DEFAULT_K, weights=LEGACY_WEIGHTS) -> dict:
+    """The baseline the rest of the paper is argued against.
+
+    The version 1 till ran two YOLOv8 detectors over twelve trained classes. This
+    scores that detector and the proposed system on the same photographs, over
+    exactly those twelve products - `research/PROTOCOL.md` section 1 explains why
+    they are the only fair comparison, and `research/dataset.py:Sku` marks them
+    with `in_legacy_model`.
+
+    Three things are deliberate, and a reviewer will check all three.
+
+    *Every* legacy product is scored, not only `split.unseen`. The detector was
+    trained on all twelve; there is no half of them held out from it, and taking
+    only the unseen half would halve the sample without buying any honesty. The
+    overlap with the split is reported so the reader can see it.
+
+    Both systems answer over the same labels, on the same probe views - the ones
+    after the first `k`, held out from the proposed system's enrolment.
+    The detector never enrolled anything, so those views are as much its home
+    turf as any other: this is the setting most favourable to it.
+
+    So the closed-set row is expected to *win* on accuracy. That is the honest
+    result and it is the one the paper wants: the detector is better on the
+    twelve products it was trained on and cannot name a thirteenth at all, which
+    is what `catalogue_coverage` reports and what E8 prices. That column counts
+    what each system *could* name across the source's whole catalogue; it is a
+    capability, not a measurement of this run, whose gallery holds only the
+    legacy products. `no_answer` covers both ways the detector declines - no box
+    at all, and a box naming something outside the products being scored.
+    """
+    legacy = [s.sku_id for s in source.skus() if s.in_legacy_model]
+    catalogue = [s.sku_id for s in source.skus()]
+    common = {"experiment": "E1", "source": source.name, "k": k,
+              "legacy_skus": legacy, "n_catalogue": len(catalogue),
+              "weights": [Path(w).name for w in weights]}
+
+    if len(legacy) < MIN_LEGACY_SKUS:
+        return {**common, "insufficient_data": True,
+                "error": (f"need at least {MIN_LEGACY_SKUS} products the version 1 detector "
+                          f"was trained on; this source has {len(legacy)}. Photograph the "
+                          f"twelve legacy products (research/PROTOCOL.md section 1) and "
+                          f"capture them with --in-legacy-model.")}
+
+    try:
+        detectors, classes = load_legacy_detectors(weights)
+    except Exception as e:                      # ultralytics absent, or no weights
+        return {**common, "insufficient_data": True,
+                "error": (f"the version 1 detectors could not be loaded: {e}. "
+                          f"pip install -r requirements-research.txt, and see NOTICE - "
+                          f"these weights are AGPL and research-only.")}
+
+    # a legacy product the detector has no class for cannot be scored either way
+    to_sku = legacy_class_to_sku()
+    known = {to_sku[name] for name in classes if name in to_sku}
+    scored = [s for s in legacy if s in known]
+    unmapped = [s for s in legacy if s not in known]
+    if len(scored) < MIN_LEGACY_SKUS:
+        return {**common, "insufficient_data": True, "unmapped_skus": unmapped,
+                "error": (f"only {len(scored)} of {len(legacy)} products marked "
+                          f"in_legacy_model have a class in "
+                          f"{[Path(w).name for w in weights]}; check the `yolo_class` "
+                          f"column in {LEGACY_CATALOGUE.name}.")}
+
+    vectors = embed_all(source, embedder, proposer)
+    gallery = build_gallery(vectors, scored, k, embedder.dim)
+
+    closed_correct = closed_silent = proposed_correct = total = 0
+    for sku in scored:
+        frames = proposed_frames(source, sku, proposer)   # aligned with vectors[sku]
+        for i in probe_indices(vectors, sku, k):
+            if i >= len(frames):
+                continue                        # cannot happen; a mismatch would be silent
+            # the detector localises and names in one step, so it gets the whole
+            # frame; its answer is the most confident box whose class is one of
+            # the products being scored
+            best = None
+            for d in detectors:
+                for prop in d.propose(frames[i]):
+                    if to_sku.get(prop.label) in scored and (
+                            best is None or prop.confidence > best.confidence):
+                        best = prop
+            closed_correct += best is not None and to_sku[best.label] == sku
+            closed_silent += best is None       # no box, or none naming one of these
+
+            matches = gallery.match(vectors[sku][i])
+            proposed_correct += bool(matches and matches[0].sku_id == sku)
+            total += 1
+
+    rows = [{"system": "Closed set: version 1 YOLOv8",
+             "accuracy": closed_correct / total if total else float("nan"),
+             "no_answer": closed_silent / total if total else float("nan"),
+             "recognisable_skus": len(scored),
+             "catalogue_coverage": len(scored) / len(catalogue) if catalogue else float("nan")},
+            {"system": f"Proposed: enrolled from {k} views",
+             "accuracy": proposed_correct / total if total else float("nan"),
+             "no_answer": 0.0,
+             "recognisable_skus": len(catalogue),
+             "catalogue_coverage": 1.0}]
+
+    return {**common, "rows": rows, "scored_skus": scored, "unmapped_skus": unmapped,
+            "n_probes": total, "backbone": getattr(embedder, "name", "?"),
+            "legacy_classes": sorted(classes),
+            "n_legacy_in_unseen": len(set(scored) & set(split.unseen)),
+            "note": ("scored on every legacy product, not only split.unseen: the version 1 "
+                     "detector was trained on all of them and nothing can be held out from "
+                     "it. Both systems answer over the same labels on the same probe views.")}
 
 
 # ------------------------------------------------------------------- E2 and E4

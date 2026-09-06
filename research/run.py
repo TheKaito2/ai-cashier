@@ -53,6 +53,9 @@ def main() -> int:
                     help="measured hours the team spent building the v1 closed-set model")
     ap.add_argument("--tag", default=None,
                     help="suffix for the results file, e.g. --tag packages -> E9-packages.json")
+    ap.add_argument("--yolo-weights", nargs="*", type=Path, default=None,
+                    help="E1 only: the version 1 detectors "
+                         "(default: models/chips_model.pt models/drinks_model.pt)")
     ap.add_argument("--only", nargs="*", default=None,
                     help="experiment ids, e.g. E2 E5")
     args = ap.parse_args()
@@ -71,9 +74,14 @@ def main() -> int:
 
     print(f"source {source.name}: {len(skus)} products")
     print(f"  seen   {split.seen}")
-    print(f"  unseen {split.unseen}   <- everything is scored on these\n")
+    # E1 is the exception and says so in its docstring: the version 1 detector
+    # was trained on all twelve of its classes, so no half of them is held out
+    print(f"  unseen {split.unseen}   <- everything but E1 is scored on these\n")
 
     jobs = {
+        "E1": lambda: X.e1_closed_set_baseline(source, embedder, proposer, split, k=args.k,
+                                               **({"weights": args.yolo_weights}
+                                                  if args.yolo_weights else {})),
         "E2": lambda: X.e2_fewshot_vs_k(source, embedder, proposer, split),
         "E3": lambda: X.e3_backbones(source, proposer, split, k=args.k,
                                      **({"backbones": args.backbones} if args.backbones else {})),
@@ -87,7 +95,7 @@ def main() -> int:
         "E9": lambda: X.e9_public_benchmark(source, embedder, split, k=args.k),
     }
     # E9 is the public-benchmark run: only meaningful on a folder source, and
-    # E6-E8 need weights and prices a benchmark does not have
+    # E1 and E6-E8 need masses, prices and legacy classes a benchmark does not have
     default_jobs = ["E9"] if args.source == "folder" else [j for j in jobs if j != "E9"]
     chosen = args.only or default_jobs
 

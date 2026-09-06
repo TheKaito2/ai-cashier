@@ -1,6 +1,6 @@
 # State — done, open, and unverifiable
 
-Last reviewed 6 September 2026, at commit `76230d6`, version 4.2.0.
+Last reviewed 6 September 2026, at commit `ecfedba`, version 4.2.0.
 
 `docs/research/08-action-items.md` is the numbered ledger and stays authoritative.
 This page adds what a ledger row cannot say: what is blocked on what, and what
@@ -9,10 +9,11 @@ this laptop physically cannot check.
 ## Shipped
 
 Recognition, till, dashboard, checkout with a real PromptPay payload, legal gating,
-enrolment, the research harness E2–E9, the Swift port with nineteen fixture-backed
+enrolment, the research harness E1–E9, the Swift port with nineteen fixture-backed
 tests, a Windows installer built by CI, a landing page on Cloudflare, and one
-visual identity across all four surfaces.  The Python suite is green; so is the
-iPhone suite.
+visual identity across all four surfaces.  The till's decision surface - the sellability gate, the basket weight
+check, checkout, disambiguation and the scan worker - is covered behaviourally by
+`tests/test_main_window.py`.  210 Python tests are green; so are the iPhone ones.
 
 ## The one thing everything else waits on
 
@@ -31,9 +32,8 @@ Not blocked by it, and already done instead: E9 on a public dataset, which is wh
 | | What | Where it is written down |
 |---|---|---|
 | 33 | Rerun E9 with MobileCLIP-B or DINOv2 — the public rows say the encoder is the lever, not the number of views.  Needs the weights downloaded | `docs/research/08-action-items.md` |
-| — | **E1 does not exist.**  It is cited in `paper/main.tex`, `research/PROTOCOL.md` and `NOTICE`, but there is no `e1_*` function and no E1 result file.  Either write it or stop citing it | `docs/kb/05-research.md` |
-| — | `scanner/ui/main_window.py` has no behavioural tests.  Its decision surface — the sellability gate, the basket weight check, checkout, disambiguation, the scan worker — is only smoke-imported.  The largest coverage gap in the tree | — |
-| — | `research/report.py`, `research/bench.py`, `research/capture.py` and seven of the eight `tools/` scripts have no tests at all | — |
+| 37 | **E1 has never run on a photograph.**  `research/experiments.py:e1_closed_set_baseline` exists and is tested, but it needs the twelve legacy products photographed with `capture.py --in-legacy-model`, ultralytics installed, and the gitignored AGPL `models/*.pt` present.  Until then it returns `insufficient_data` and `paper/tables/e1_closed_set.tex` is a "NOT RUN" stub | `docs/kb/05-research.md` |
+| — | `research/report.py`, `research/bench.py` and `research/capture.py` still have no tests, and seven of the eight `tools/` scripts have none either | — |
 | — | `server/services/database.py:get_theme` defaults to `light` while `DEFAULT_SETTINGS` says `dark`.  Harmless today, untested, and exactly the kind of thing that surprises someone later | — |
 | — | `detection_confidence` is seeded into the settings table and read by nothing.  A leftover from the version 3 detector | `docs/kb/03-data-and-contracts.md` |
 | — | `docs/shots/` has 60 images across 13 directories and no manifest saying which shot shows what or which are current | `docs/kb/04-surfaces.md` |

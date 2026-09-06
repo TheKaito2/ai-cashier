@@ -69,6 +69,37 @@ def write(name: str, text: str) -> None:
 
 # --------------------------------------------------------------------- tables
 
+def table_e1() -> None:
+    r = load("E1")
+    if not r:
+        return
+    if r.get("insufficient_data"):
+        write("e1_closed_set", header(r) + "% NOT RUN: " + r["error"].replace("\n", " ") + "\n")
+        return
+    rows = [{**row, "accuracy_pct": row["accuracy"] * 100,
+             "silent_pct": row["no_answer"] * 100,
+             "coverage_pct": row["catalogue_coverage"] * 100} for row in r["rows"]]
+    n = len(r["scored_skus"])
+    caption = (f"The version~1 closed-set detector against the proposed system, on the {n} "
+               f"products the detector was trained on, over the same {n} labels, scored on "
+               f"the same {r['n_probes']} held-out views. The detector is measured on its "
+               f"own training classes, which is the setting most favourable to it. The last "
+               f"two columns are what it cannot do, and Table~\\ref{{tab:enrolment}} is what "
+               f"changing that costs.")
+    if r.get("source") == "synthetic":
+        # the direction of this error flatters us, so it gets said in the caption
+        # and not only in the generated header nobody reads twice
+        caption += (" \\textbf{These rows are synthetic: the detector was trained on "
+                    "photographs and is being shown rendered packets, so its accuracy here "
+                    "measures the renderer, not the detector. Not a result.}")
+    write("e1_closed_set", latex_table(
+        r, [("system", "System", ""), ("accuracy_pct", "Top-1 (\\%)", ".1f"),
+            ("silent_pct", "No answer (\\%)", ".1f"),
+            ("recognisable_skus", "Products it can name", "d"),
+            ("coverage_pct", "Of the catalogue (\\%)", ".1f")], rows,
+        caption=caption, label="closedset"))
+
+
 def table_e2() -> None:
     r = load("E2")
     if not r:
@@ -293,7 +324,8 @@ def main() -> int:
         return 1
     sources = {json.loads(p.read_text()).get("source") for p in RESULTS.glob("*.json")}
     print(f"regenerating from results in {sources}\n")
-    for fn in (table_e2, table_e3, table_e4, table_e5, table_e6, table_e7, table_e8, table_e9):
+    for fn in (table_e1, table_e2, table_e3, table_e4, table_e5, table_e6, table_e7,
+               table_e8, table_e9):
         fn()
     figures()
     if "synthetic" in sources:

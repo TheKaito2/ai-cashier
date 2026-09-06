@@ -5,7 +5,7 @@ cannot be a classifier.  On a fixed rig with a light ring, subtracting the empty
 mat is both the simplest and the most general answer: it proposes anything that
 was not there before, which is exactly the requirement.
 
-The YOLO proposer is kept for comparison (research/exp3) and because it still
+The YOLO proposer is kept for comparison (the E1 baseline) and because it still
 helps on a cluttered background - but it can only propose what it was trained
 on, which is the limitation this whole package exists to remove.
 """
@@ -26,6 +26,11 @@ class Proposal:
     box: Box
     area_px: int
     confidence: float = 1.0
+    #: What a *classifying* proposer called it, when it has an opinion.  The
+    #: class-agnostic proposers leave it None by construction - they find things
+    #: without naming them, which is the whole point.  Only the closed-set
+    #: baseline (research/experiments.py:e1_closed_set_baseline) reads it.
+    label: str | None = None
 
     def crop(self, frame: np.ndarray, pad: int = 6) -> np.ndarray:
         h, w = frame.shape[:2]
@@ -184,12 +189,19 @@ class YoloProposer:
         self.conf = conf
         self.imgsz = imgsz
 
+    @property
+    def class_names(self) -> dict[int, str]:
+        """The classes this detector was trained on - its whole world."""
+        return dict(self.model.names)
+
     def propose(self, frame: np.ndarray) -> list[Proposal]:
         result = self.model(frame, conf=self.conf, imgsz=self.imgsz, verbose=False)[0]
+        names = result.names
         proposals = []
         if result.boxes is not None:
-            for x1, y1, x2, y2, score, _cls in result.boxes.data.tolist():
+            for x1, y1, x2, y2, score, cls in result.boxes.data.tolist():
                 box = (int(x1), int(y1), int(x2), int(y2))
                 proposals.append(Proposal(
-                    box=box, area_px=int((x2 - x1) * (y2 - y1)), confidence=float(score)))
+                    box=box, area_px=int((x2 - x1) * (y2 - y1)), confidence=float(score),
+                    label=names.get(int(cls))))
         return proposals

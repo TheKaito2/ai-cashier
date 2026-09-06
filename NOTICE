@@ -16,10 +16,13 @@ NOT covered by the Apache licence:
 
   models/chips_model.pt and models/drinks_model.pt were trained with
   Ultralytics YOLOv8, which is AGPL-3.0. Those weights are AGPL-derived. They
-  are used only as the closed-set baseline (research/, experiment E1) and as an
-  auto-labelling tool; nothing in scanner/ or server/ imports ultralytics or
-  loads them (tests/test_no_ultralytics.py enforces this). Do not ship them
-  inside a proprietary product.
+  are used only as the closed-set baseline - experiment E1,
+  research/experiments.py:e1_closed_set_baseline, which is the only code in this
+  repository that loads them - and as an auto-labelling tool. Nothing in
+  scanner/ or server/ imports ultralytics or loads them
+  (tests/test_no_ultralytics.py enforces this), the weights are never committed
+  (.gitignore), and ultralytics is in requirements-research.txt only. Do not
+  ship them inside a proprietary product.
 
 Fonts bundled with the till, the dashboard, the iPhone app and the site:
   IBM Plex Sans Thai, IBM Plex Mono   SIL Open Font License 1.1 (assets/fonts/OFL.txt)

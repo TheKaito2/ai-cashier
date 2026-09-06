@@ -70,6 +70,26 @@ Buy deliberately:
 Those last two rows are what make the fusion table say something. Without them
 every modality looks equally good and the paper has no argument.
 
+The twelve are not a judgement call — they are the classes inside
+`models/chips_model.pt` and `models/drinks_model.pt`, and E1 scores nothing else:
+
+| chips | drinks |
+|---|---|
+| `Lay's-Flat-Original-Flavor` | `CocaCola-Bottle` |
+| `Lay's-Nori-Seaweed-Flavor` | `CocaCola-Can` |
+| `Lay's-Ridged-Original-Flavor` | `Crystal-Water` |
+| `Snackjack-Original-Flavor` | `Fanta-FruitPunch-Flavor` |
+| `Tasto-Japanese-Seaweed-Flavor` | `Pepsi` |
+| `Tasto-Original-Flavor` | `Sprite` |
+
+Capture each of them with `--in-legacy-model` and with the `sku_id` the seed
+catalogue already gives it (`data/products.json`, the legacy `yolo_class` column
+— for example `lays-nori-seaweed`, not `lays-nori`). That column is the only
+record of which class belongs to which product, and
+`research/experiments.py:legacy_class_to_sku` reads it. A product marked
+`--in-legacy-model` under any other id is reported as unmapped and dropped from
+the comparison rather than scored wrong.
+
 ## 2. Photographing
 
 ```bash
@@ -136,6 +156,7 @@ differently:
 ## 4. Running everything
 
 ```bash
+pip install -r requirements-research.txt        # E1 needs ultralytics; the till never does
 python research/run.py --source captures --retrain-hours <your real figure>
 python research/report.py
 ```
@@ -149,6 +170,8 @@ figure, and a made-up number is the fastest way to lose a judge.
 
 - [ ] `python research/run.py --source captures` ran without skipping an experiment
 - [ ] E5 produced a number rather than `insufficient_data` (if not, buy more products)
+- [ ] E1 scored twelve products, not four — `scored_skus` in `research/results/E1.json`,
+      and `unmapped_skus` is empty
 - [ ] Every table in `paper/tables/` says `SOURCE = captures`, not `synthetic`
 - [ ] `python research/bench.py` was run **on the Raspberry Pi**, not on a laptop
 - [ ] The split in the results shows the products you meant to hold out

@@ -1,6 +1,6 @@
 # The research harness
 
-Eight experiments, one driver, one report generator, and a rule: **no number in
+Nine experiments, one driver, one report generator, and a rule: **no number in
 the paper is typed by hand.**  `research/run.py` writes JSON, `research/report.py`
 turns JSON into LaTeX, and `paper/main.tex` only ever `\input`s the result.  If a
 figure in the paper cannot be traced to a file in `research/results/`, it is a bug.
@@ -12,7 +12,7 @@ dict.
 
 | | Question | Function |
 |---|---|---|
-| E1 | How does a retrained closed-set detector compare? | **Does not exist.**  See below |
+| E1 | How does the version 1 closed-set detector compare? | `research/experiments.py:e1_closed_set_baseline` |
 | E2 | How many reference views does a new product need? | `research/experiments.py:e2_fewshot_vs_k` |
 | E3 | Which backbone, at what cost per crop? | `research/experiments.py:e3_backbones` |
 | E4 | How many frames should vote on one decision? | `research/experiments.py:e4_temporal_voting` |
@@ -22,11 +22,46 @@ dict.
 | E8 | What does putting one new product on sale actually cost? | `research/experiments.py:e8_enrolment_cost` |
 | E9 | Does any of this hold on somebody else's photographs? | `research/experiments.py:e9_public_benchmark` |
 
-**E1 is a citation with no code behind it.**  It is named in the module docstring
-of `research/experiments.py`, cited in `paper/main.tex`, referenced by
-`research/PROTOCOL.md`, and used in `NOTICE` to justify keeping the AGPL YOLO
-weights.  There is no `e1_*` function and no E1 result file.  Anyone writing the
-closed-set comparison starts from zero.
+### E1, and why its numbers will not flatter us
+
+E1 was a citation with no code behind it until 6 September 2026 — named in four
+places, implemented in none, and used in `NOTICE` to justify keeping the AGPL
+YOLO weights.  It now exists, and three of its choices are deliberate.
+
+**It scores every legacy product, not only `split.unseen`.**  The version 1
+detector was trained on all twelve classes; no half of them is held out from it,
+and taking only the unseen half would halve the sample without buying any
+honesty.  `n_legacy_in_unseen` in the result records the overlap so a reader can
+see it.  It is the only experiment that scores on products from the seen half, and
+`research/experiments.py:e1_closed_set_baseline` says why in its docstring.
+
+**Both systems answer over the same labels, on the same probe views** — the ones
+after the first `k`, held out from the proposed system's enrolment but not from
+anything the detector ever saw.  That is the setting most favourable to the
+baseline, on purpose.
+
+**The closed-set row is expected to win on accuracy.**  That is the result the
+paper wants: the detector is better on the twelve products it was trained on and
+cannot name a thirteenth at all.  The argument is the `catalogue_coverage`
+column, and `paper/tables/e8_enrolment.tex` is what changing that costs.
+
+The twelve classes are `Lay's-Flat-Original-Flavor`, `Lay's-Nori-Seaweed-Flavor`,
+`Lay's-Ridged-Original-Flavor`, `Snackjack-Original-Flavor`,
+`Tasto-Japanese-Seaweed-Flavor`, `Tasto-Original-Flavor`, `CocaCola-Bottle`,
+`CocaCola-Can`, `Crystal-Water`, `Fanta-FruitPunch-Flavor`, `Pepsi` and `Sprite`.
+Six live in `models/chips_model.pt` and six in `models/drinks_model.pt`, each
+numbered 0–5, so the union has to be taken **by name** — merging the index maps
+silently drops one model's six.  The class-to-`sku_id` mapping is the legacy
+`yolo_class` column in `data/products.json`, which is the only record of it.
+
+**E1 does not run in a fresh checkout, and says so.**  The weights are AGPL and
+gitignored, ultralytics is not in `requirements.txt`, and there are no captured
+photographs of the twelve products, so E1 returns `insufficient_data` with the
+reason and `research/report.py:table_e1` writes a "NOT RUN" stub instead of a
+table.  On synthetic data it runs end to end — the four rendered packets whose
+sku_ids the detector knows — but the detector was trained on photographs and is
+being shown renders, so it recognises almost nothing.  That error flatters us,
+which is why the generated caption says in bold that it measures the renderer.
 
 ## Where images come from
 
@@ -47,7 +82,7 @@ products the representation was trained on would measure nothing, and
 
 ## What has actually been measured
 
-Eleven files in `research/results/`.  **E2 through E8 are all synthetic.**  Only
+Twelve files in `research/results/`.  **E1 through E8 are all synthetic.**  Only
 the three E9 files contain numbers from photographs somebody else took.
 
 ### E9 — Grocery Store dataset (Klasson et al., WACV 2019, MIT)
@@ -90,7 +125,7 @@ real capture session runs.
 
 ### The rest
 
-`research/results/E2.json`, `research/results/E3.json`, `research/results/E4.json`, `research/results/E6.json`, `research/results/E7.json`, `research/results/E8.json` — synthetic, and
+`research/results/E1.json`, `research/results/E2.json`, `research/results/E3.json`, `research/results/E4.json`, `research/results/E6.json`, `research/results/E7.json`, `research/results/E8.json` — synthetic, and
 every table they generate carries a machine-written warning saying so.
 `research/results/E8.json` has `closed_set_retrain_hours: null`; the code refuses to invent it and
 the team must supply it from its own record.  `research/results/bench-devlaptop.json` is per-stage
@@ -98,7 +133,7 @@ latency on an M1 and is explicitly **not** a Raspberry Pi number.
 
 ## Tables and figures
 
-`research/report.py` writes ten `.tex` files into `paper/tables/` and three PDFs
+`research/report.py` writes eleven `.tex` files into `paper/tables/` and three PDFs
 into `paper/figures/`, each prefixed with a "generated, do not edit" banner and,
 when the source is synthetic, a three-line warning block.
 `paper/tables/e5_openset.tex` is currently a "NOT RUN" stub rather than a table.
