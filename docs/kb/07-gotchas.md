@@ -84,6 +84,29 @@ The pure-Swift proposer takes roughly eighteen seconds per frame without
 optimisation.  `ios/AICashier/project.yml` sets `-O` and whole-module compilation
 for this reason; do not "simplify" it away.
 
+## Exporting an encoder
+
+**An exported model returns plausible-looking vectors that match nothing.**
+Check the normalisation.  Preprocessing happens outside the graph, so a frozen
+encoder has to carry the mean and standard deviation it was trained with, and
+until September 2026 `OnnxEmbedder` assumed ImageNet for everything.  MobileCLIP
+uses mean 0 and standard deviation 1, so its first export scored a cosine of
+0.19 against the torch model it came from.  Nothing errored.  Graphs now stamp
+their own statistics, and `tools/export_embedder.py` prints the agreement
+cosine — if that number is not ~1.0, stop and read it rather than concluding the
+encoder is weak.
+
+**A CLIP variant scores worse than it should.**  Check the input resolution.
+MobileCLIP-S1/S2 and the MobileCLIP2 family are trained at 256 px, not 224.
+Both the width and the resolution are now read from open_clip's own model config
+rather than a hand-written table, because those are two more numbers that drift.
+
+**`torch.export` fails on an encoder.**  Some models simply do not freeze —
+DINOv2-S/14 is one.  `tools/export_embedder.py` reports it and exits non-zero
+instead of writing a broken graph, and `research/bench.py` falls back to torch
+while recording which runtime it timed.  A model that cannot be exported cannot
+ship, whatever it scores.
+
 ## Research and the paper
 
 **`make` in `paper/` fails on a generated table.**

@@ -306,6 +306,23 @@ nothing about the rig, its light or its mat. The centred cosine of
 Section~\ref{sec:method} beats the raw cosine at every $k$ on these photographs as
 it did on the mat.
 
+\paragraph{What that costs.} Table~\ref{tab:backbones} prices it. Every row is
+measured under the same runtime the till uses, so the milliseconds are
+comparable rather than indicative; the harness reports that condition and
+refuses the claim when it does not hold. The accuracy is not free, and the
+factor is large: the cheapest CLIP-class encoder here costs an order of
+magnitude more per crop than the ImageNet trunk it would replace, and the most
+accurate costs nearly two. Whether any of that fits an interactive frame budget
+on the target hardware is a separate measurement, and until it exists the
+comparison bounds the representation rather than the product. Two details
+matter for anyone repeating this. The two S-variants are not ordered as their
+names suggest --- the smaller is both more accurate and slightly cheaper, so the
+larger is dominated on both axes. And one otherwise reasonable candidate, a
+self-supervised transformer, could not be exported to the inference runtime at
+all: a representation that cannot be frozen is not a candidate for an edge
+device however it benchmarks, which is a criterion the retrieval literature
+rarely applies.
+
 \paragraph{The encoder is the lever.} Every row of Table~\ref{tab:public} is the
 same matching code, the same split and the same enrolment rule over a different
 frozen encoder, so the spread between rows is attributable to the representation

@@ -158,12 +158,55 @@ Five things this says, and they are why the experiment was worth running:
    `docs/research/07-research-roadmap.md`, answered on a public benchmark, and it
    is a stronger claim than the encoder swap that produced it.
 
+### E3 — what it costs to be that accurate
+
+The E9 rows above say the encoder is the lever.  E3 puts a price on it: the same
+matching code and the same split over five encoders, **every one under ONNX
+Runtime**, so the milliseconds are comparable — `comparable_timings` is true in
+`research/results/E3.json` and the harness refuses to claim it otherwise.
+Measured on an M1 laptop, on the public cartons.
+
+| Encoder | dim | top-1 % | whitened % | ms/crop |
+|---|---|---|---|---|
+| mobilenet_v3_small (ships today) | 576 | 45.8 | 41.7 | **7.9** |
+| mobileclip2_s0 | 512 | 79.9 | 76.4 | 203 |
+| mobileclip_s1 | 512 | **85.4** | 78.5 | 292 |
+| mobileclip_s2 | 512 | 83.3 | 83.3 | 281 |
+| mobileclip_b | 512 | **89.6** | 84.7 | 584 |
+
+Three things follow.
+
+**The accuracy is not free: it is 26 to 74 times the cost.**  The cheapest CLIP
+encoder is 203 ms against 7.9 ms.  On an M1.  A Pi 5 is several times slower
+again, so whether any of this is affordable at the till is a measurement nobody
+has made — ledger item 40, and it needs the hardware rather than more thinking.
+
+**S1 dominates S2.**  More accurate and slightly cheaper, so S2 is off the table
+whatever the budget.  Worth stating because the naming implies otherwise.
+
+**MobileCLIP2-S0 is the interesting row.**  It gives up four points to S1 for a
+third off the cost, and it is the smallest thing here that beats the shipped
+encoder by thirty-four points.  If the Pi can afford anything, it is this.
+
+**DINOv2-S/14 cannot be exported at all.**  `torch.export` fails on it, so it has
+no ONNX row above and could not ship even if it scored well — which it does not
+(45.8 %, the same as the trunk it would replace).  That is a deployability fact
+worth one line in the paper: a representation that cannot be frozen is not a
+candidate, however it benchmarks.
+
+**A trap this uncovered.**  Preprocessing happens outside the graph, and the
+first CLIP export scored a cosine of **0.19** against the torch model it came
+from — because `OnnxEmbedder` normalised everything with ImageNet statistics and
+MobileCLIP uses mean 0, standard deviation 1.  It still returned 512 numbers,
+just meaningless ones, and it reads as "this encoder is bad" rather than "we fed
+it wrongly".  Exported graphs now carry their own statistics
+(`recognition/embedder.py:export_onnx`), after which every MobileCLIP variant
+agrees at cosine 1.00000.  See `docs/kb/07-gotchas.md`.
+
 **What this does not say.**  These are shelf photographs under supermarket
-lighting, not mat crops under a ring light, and MobileCLIP-B is a ViT-B — an
-order of magnitude heavier than the MobileNetV3 the till ships.  Whether it holds
-interactive latency on a Raspberry Pi 5 is unmeasured, and until it is, the
-result bounds what the *representation* can do rather than what the *till* will
-do.  `research/bench.py` answers that and needs no products.
+lighting, not mat crops under a ring light.  And every millisecond above was
+measured on an M1: the Pi 5 numbers, which are the ones that decide what ships,
+still need the hardware.  `research/bench.py` answers that and needs no products.
 
 **The synthetic threshold does not transfer.**  E5 on synthetic data sits in the
 `insufficient_data` state — the split yields one enrolled product and two
