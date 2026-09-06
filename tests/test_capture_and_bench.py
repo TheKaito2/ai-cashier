@@ -198,3 +198,59 @@ def test_the_demo_keeps_one_product_out_of_the_gallery(tmp_path, monkeypatch):
     assert seed.HOLD_BACK not in gallery.skus
     assert len(gallery.skus) >= 4, "the centre only freezes once four products are enrolled"
     assert gallery.frozen, "a demo gallery that never froze would drift as a judge enrols"
+
+
+# ------------------------------------------------------- finding the camera
+
+class FakeCap:
+    """One camera index, behaving the way OpenCV does on macOS."""
+
+    def __init__(self, opens=True, frame=True):
+        self._opens, self._frame = opens, frame
+
+    def isOpened(self):
+        return self._opens
+
+    def set(self, *a):
+        pass
+
+    def read(self):
+        return (True, np.zeros((720, 1280, 3), np.uint8)) if self._frame else (False, None)
+
+    def release(self):
+        pass
+
+
+def test_a_working_camera_is_reported_with_its_size(monkeypatch, capsys):
+    monkeypatch.setattr(cv2, "VideoCapture", lambda i: FakeCap(opens=(i == 0)))
+    assert capture.list_cameras() == 0
+    out = capsys.readouterr().out
+    assert "camera 0: 1280x720" in out
+    assert "--camera 0" in out, "it should say what to run next"
+
+
+def test_a_camera_that_opens_but_returns_nothing_is_named_as_permission(monkeypatch, capsys):
+    """This is exactly what an ungranted terminal looks like on macOS, and the
+    message has to say so - the alternative is a student concluding the webcam
+    is broken."""
+    monkeypatch.setattr(cv2, "VideoCapture", lambda i: FakeCap(opens=(i == 0), frame=False))
+    assert capture.list_cameras() == 1
+    out = capsys.readouterr().out
+    assert "permission" in out
+    assert "Privacy & Security" in out and "Cmd-Q" in out
+
+
+def test_no_camera_at_all_still_explains_the_grant(monkeypatch, capsys):
+    monkeypatch.setattr(cv2, "VideoCapture", lambda i: FakeCap(opens=False))
+    assert capture.list_cameras() == 1
+    assert "No camera answered" in capsys.readouterr().out
+
+
+def test_probing_a_missing_index_prints_nothing(monkeypatch, capsys):
+    """Asking for camera 3 on a one-camera laptop makes AVFoundation shout in C.
+    Those lines drowned the one line that mattered."""
+    monkeypatch.setattr(cv2, "VideoCapture", lambda i: FakeCap(opens=(i == 0)))
+    capture.list_cameras()
+    out = capsys.readouterr().out
+    for absent in ("camera 1", "camera 2", "camera 3", "camera 4"):
+        assert absent not in out

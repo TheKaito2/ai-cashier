@@ -20,8 +20,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 import cv2
@@ -54,24 +56,78 @@ def open_camera(index: int):
     return cap
 
 
-def list_cameras(max_index: int = 5) -> int:
-    """Which camera indices open, and at what size. On a Mac the built-in camera
-    is 0 and an unlocked iPhone nearby appears as another index (Continuity Camera)."""
-    found = 0
-    for i in range(max_index):
-        cap = cv2.VideoCapture(i)
+@contextmanager
+def _quiet():
+    """Silence OpenCV while probing.
+
+    Asking for camera 3 on a laptop with one camera makes AVFoundation print
+    several lines of C-level error, and those lines drown the one line that
+    matters.  They come from the library rather than from Python, so redirecting
+    sys.stderr is not enough - the file descriptor has to move.
+    """
+    saved = os.dup(2)
+    with open(os.devnull, "w") as null:
+        os.dup2(null.fileno(), 2)
+    try:
+        yield
+    finally:
+        os.dup2(saved, 2)
+        os.close(saved)
+
+
+def probe_camera(index: int) -> tuple[bool, str]:
+    """Open one index and try to read a frame.  Returns (usable, what happened)."""
+    with _quiet():
+        cap = cv2.VideoCapture(index)
         if not cap.isOpened():
-            continue
+            cap.release()
+            return False, "not present"
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         ok, frame = cap.read()
         cap.release()
-        size = f"{frame.shape[1]}x{frame.shape[0]}" if ok else "opened but no frame"
-        print(f"  camera {i}: {size}")
-        found += ok
-    if not found:
-        print("  no camera opened (on macOS the terminal needs camera permission)")
-    return 0 if found else 1
+    if not ok:
+        return False, "opens but returns no frame - almost always permission"
+    return True, f"{frame.shape[1]}x{frame.shape[0]}"
+
+
+def list_cameras(max_index: int = 5) -> int:
+    """Which camera indices are usable, and at what size.
+
+    On a Mac the built-in camera is 0 and an unlocked iPhone nearby appears as
+    another index (Continuity Camera).
+    """
+    usable, blocked = [], []
+    for i in range(max_index):
+        ok, detail = probe_camera(i)
+        if ok:
+            usable.append(i)
+            print(f"  camera {i}: {detail}")
+        elif detail.startswith("opens"):
+            blocked.append(i)
+            print(f"  camera {i}: {detail}")
+
+    if usable:
+        print(f"\n  {len(usable)} camera(s) ready. Next:  "
+              f"python research/capture.py --mat --camera {usable[0]}")
+        return 0
+
+    if blocked:
+        print("\n  The camera exists but hands back nothing, which on macOS means "
+              "this terminal\n  has not been granted access.")
+    else:
+        print("\n  No camera answered at all.")
+    print("""
+  On macOS:
+    1. System Settings -> Privacy & Security -> Camera
+    2. switch on the app you are running this from (Terminal, or iTerm)
+    3. QUIT that app completely - Cmd-Q, not just closing the window -
+       and reopen it.  The grant is only picked up on a fresh launch.
+    4. run this again
+
+  The permission belongs to the terminal application, not to Python and not to
+  this project, which is why an agent cannot grant it for you.""")
+    return 1
 
 
 def capture_mat(camera: int) -> int:

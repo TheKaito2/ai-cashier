@@ -133,9 +133,18 @@ believing anything: `synthetic` is not evidence about real products, and
 ## The machine
 
 **`capture.py --list` reports no camera.**
-On macOS the camera grant is per-terminal, and an agent's process does not have
-it.  Run it from a terminal the user has granted access to; the operating system
-asks once.
+On macOS the grant belongs to the *terminal application*, not to Python and not
+to the project, so an agent's process cannot have it and cannot ask for it.
+System Settings → Privacy & Security → Camera, switch on Terminal or iTerm, then
+**quit that application entirely (Cmd-Q) and reopen it** — the grant is only read
+at launch, so toggling it while the terminal is running changes nothing.
+
+Two symptoms, two meanings.  "opens but returns no frame" is the permission
+case.  "not present" means the index does not exist; on a Mac with one camera
+only index 0 does, and probing 1–4 used to fill the screen with AVFoundation
+errors that buried the useful line.  `research/capture.py:probe_camera` now
+silences those at the file-descriptor level, because they come from C rather
+than from Python and redirecting `sys.stderr` does not catch them.
 
 **`timeout` is not found.**
 macOS ships no GNU `timeout`.  Use the tool's own timeout, or `gtimeout` from
