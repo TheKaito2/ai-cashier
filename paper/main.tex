@@ -301,11 +301,26 @@ classes (milk, juice, yoghurt), the kind of object a till sees; the \emph{iconic
 rows put the manufacturer image first among the reference views, so $k=1$
 measures enrolment from a pack shot with no capture at all. These rows say what
 the frozen representation does on photographs nobody in the team took; they say
-nothing about the rig, its light or its mat. On this set the ImageNet-trained
-trunk is the weak part: more reference views help little and the open-set rule
-barely separates known from unknown, which makes the encoder ablation (E3), not
-$k$, the lever --- and the centred cosine of Section~\ref{sec:method} beats the raw
-cosine at every $k$ on these photographs as it did on the mat.
+nothing about the rig, its light or its mat. The centred cosine of
+Section~\ref{sec:method} beats the raw cosine at every $k$ on these photographs as
+it did on the mat.
+
+\paragraph{The encoder is the lever.} Every row of Table~\ref{tab:public} is the
+same matching code, the same split and the same enrolment rule over a different
+frozen encoder, so the spread between rows is attributable to the representation
+alone. It dominates: exchanging the ImageNet-trained trunk for a small
+CLIP-class encoder~\cite{maminta2026grocery} moves top-1 further than any choice of
+$k$, of scoring rule, or of tracker in this paper. Two things about that are
+worth stating rather than tabulating. First, the gain is larger in abstention
+than in identification --- the proportion of unstocked products wrongly accepted
+at a fixed true-positive rate falls by an order of magnitude
+(Table~\ref{tab:publicopenset}) --- and it is abstention, not top-1, that decides
+whether a till takes the wrong money. Second, the two properties come apart: the
+self-supervised encoder matches the ImageNet trunk's top-1 on the carton subset
+while separating known from unknown considerably better. A representation can be
+no better at naming a product and still much better at admitting it has never
+seen one, which is a distinction the self-checkout literature reports only
+half of.
 
 \todo{write the rest of this section only after research/run.py --source captures. Every
 table above regenerates from the results; do not type numbers into the prose
@@ -317,6 +332,13 @@ that are not in a table.}
 crops under a fixed light: they bound what the encoder can do, not what the till
 does, and the near-identical cartons in that set (six Arla milks) are the same
 failure as ours.
+
+\paragraph{The best encoder is not yet the shipped one.} The strongest row of
+Table~\ref{tab:public} comes from a vision transformer an order of magnitude
+heavier than the network the till runs, measured on a laptop. Whether it holds an
+interactive frame budget on the target hardware is unmeasured, so the result
+bounds the representation rather than the deployed system; the distilled variants
+exist for exactly this trade and are the obvious next measurement.
 
 \paragraph{Near-identical variants.} Two flavours of the same brand in the same
 packaging are the case appearance does not solve, and no amount of enrolment

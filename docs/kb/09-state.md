@@ -9,7 +9,7 @@ this laptop physically cannot check.
 ## Shipped
 
 Recognition, till, dashboard, checkout with a real PromptPay payload, legal gating,
-enrolment, the research harness E1–E9, the Swift port with nineteen fixture-backed
+enrolment, the research harness E1–E9 with three encoders measured on a public benchmark, the Swift port with nineteen fixture-backed
 tests, a Windows installer built by CI, a landing page on Cloudflare, and one
 visual identity across all four surfaces.  The till's decision surface - the sellability gate, the basket weight
 check, checkout, disambiguation and the scan worker - is covered behaviourally by
@@ -31,7 +31,7 @@ Not blocked by it, and already done instead: E9 on a public dataset, which is wh
 
 | | What | Where it is written down |
 |---|---|---|
-| 33 | Rerun E9 with MobileCLIP-B or DINOv2 — the public rows say the encoder is the lever, not the number of views.  Needs the weights downloaded | `docs/research/08-action-items.md` |
+| 40 | **The best encoder is not the shipped one.**  MobileCLIP-B nearly doubles top-1 on the public cartons and cuts the unknown-accept rate tenfold, but it is a ViT-B measured on a laptop.  Whether it holds an interactive frame budget on a Raspberry Pi 5 is unmeasured — and that answer needs no products, only the Pi | `docs/kb/05-research.md` |
 | 37 | **E1 has never run on a photograph.**  `research/experiments.py:e1_closed_set_baseline` exists and is tested, but it needs the twelve legacy products photographed with `capture.py --in-legacy-model`, ultralytics installed, and the gitignored AGPL `models/*.pt` present.  Until then it returns `insufficient_data` and `paper/tables/e1_closed_set.tex` is a "NOT RUN" stub | `docs/kb/05-research.md` |
 | — | `tools/export_embedder.py`, `tools/export_coreml.py`, `tools/export_fixtures.py`, `tools/seed_demo.py` and `tools/make_marker.py` still have no tests — each writes into the repository, so testing them needs the output paths made injectable first | — |
 | — | `tools/seed_demo.py` writes the mat and the gallery to the repository's own `data/` rather than to `paths.py:data_dir`, so it ignores `AI_CASHIER_DATA`.  Harmless for a dev demo, wrong for a frozen install, and it is why the script has no test | — |

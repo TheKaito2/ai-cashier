@@ -88,35 +88,66 @@ the three E9 files contain numbers from photographs somebody else took.
 ### E9 — Grocery Store dataset (Klasson et al., WACV 2019, MIT)
 
 Phone photographs of groceries on shelves, laid out by
-`research/prepare_grocerystore.py` into three symlinked views.  Frozen ImageNet
-MobileNetV3-Small trunk, no fine-tuning.  Scored on the unseen half only.
+`research/prepare_grocerystore.py` into three symlinked views.  No fine-tuning:
+every encoder is frozen and the products are enrolled from k views like any
+other.  Scored on the unseen half only.  Numbers below are read off
+`paper/tables/e9_public.tex`; the table is the authority.
 
-| View | SKUs | k=1 | k=3 | k=5 | probes at k=5 |
+**Identification, top-1 %, nearest-view scoring:**
+
+| View | SKUs | Encoder | k=1 | k=3 | k=5 |
 |---|---|---|---|---|---|
-| `grocerystore-packages` (cartons — closest to a till item) | 31 | 33.7 % | 47.7 % | **45.8 %** | 144 |
-| `grocerystore-all` (all 81 fine classes) | 81 | 44.8 % | 61.8 % | **59.7 %** | 360 |
-| `grocerystore-iconic` (the manufacturer's pack shot enrolled first) | 81 | **29.8 %** | 59.8 % | 62.8 % | 360 |
+| packages (cartons) | 16 | mobilenet_v3_small | 33.7 | 47.7 | 45.8 |
+| packages | 16 | dinov2_vits14 | 43.3 | 53.4 | 45.8 |
+| packages | 16 | **mobileclip_b** | **75.0** | 88.6 | **89.6** |
+| all 81 classes | 40 | mobilenet_v3_small | 44.8 | 61.8 | 59.7 |
+| all 81 | 40 | dinov2_vits14 | 62.7 | 75.0 | 73.3 |
+| all 81 | 40 | **mobileclip_b** | **72.1** | 83.9 | 81.4 |
+| iconic-first | 40 | mobilenet_v3_small | 29.8 | 59.8 | 62.8 |
 
-Open-set, max-cosine rule: AUROC **0.668** on packages, **0.365** on all 81,
-**0.401** on iconic-first.  Energy scoring gives 0.688 on packages.  FPR at 95 %
-TPR is 79 % on packages and 99 % on all — at that operating point the abstention
-rule is barely better than a coin.
+**Abstention, max-cosine rule:**
 
-Three things this says, and they are the point of having run it:
+| View | Encoder | AUROC | FPR at 95 % TPR |
+|---|---|---|---|
+| packages | mobilenet_v3_small | 0.668 | 0.795 |
+| packages | dinov2_vits14 | 0.770 | 0.679 |
+| packages | **mobileclip_b** | **0.985** | **0.080** |
+| all 81 | mobilenet_v3_small | 0.365 | 0.986 |
+| all 81 | dinov2_vits14 | 0.662 | 0.811 |
+| all 81 | **mobileclip_b** | 0.837 | 0.621 |
 
-1. **The encoder is the lever, not the number of views.**  Going from one view to
-   five buys about twelve points; the ceiling is set by a trunk that was never
-   shown a grocery shelf.  This is open item 33 in `docs/research/08-action-items.md`
-   — rerun E9 with MobileCLIP-B or DINOv2.
-2. **More views is not monotonic.**  On all 81 classes, nearest-view scoring peaks
-   at k=3 (61.8 %) and dips at k=5 (59.7 %), while prototype-mean scoring keeps
-   climbing to 65.0 %.  A fifth view of a shelf photograph adds as much noise as
-   signal to nearest-view scoring.  Worth a sentence in the paper rather than a
-   quiet omission.
-3. **Zero-capture enrolment is not free but is not hopeless.**  Enrolling from the
-   manufacturer's pack shot alone gives 29.8 %; adding four real photographs takes
-   it to 62.8 %, past the all-real number.  That is the seed of Tier 2 question 3
-   in `docs/research/07-research-roadmap.md`.
+Five things this says, and they are why the experiment was worth running:
+
+1. **The encoder is the lever, and now there is a number for it.**  Swapping the
+   frozen ImageNet trunk for MobileCLIP-B roughly doubles top-1 on cartons —
+   45.8 % to 89.6 % — without changing a line of the matching code.  Nothing
+   about k, the tracker or the fusion moves accuracy anywhere near that far.
+   This was open item 33 and it is now closed.
+2. **The abstention rule is where the swap actually matters.**  On cartons the
+   proportion of unknown products wrongly accepted at 95 % true-positive rate
+   falls from 79 % to **8 %** — a tenfold reduction in the failure that takes the
+   wrong money.  Identification accuracy is the headline; this is the number the
+   till's safety claim rests on.
+3. **Identifying well and knowing what you do not know are separable.**  DINOv2-S
+   scores exactly the same top-1 as MobileNetV3 on cartons at k=5 (45.8 %) while
+   being clearly better at abstention (AUROC 0.770 against 0.668).  A
+   representation can be no better at naming things and still much better at
+   admitting it has not seen one.  Worth a sentence in the paper: the
+   retail-checkout literature tends to report only the first.
+4. **More views is not monotonic.**  Nearest-view scoring peaks at k=3 and dips
+   at k=5 on several rows, while prototype-mean scoring keeps climbing.  A fifth
+   shelf photograph adds as much noise as signal to nearest-view scoring.
+5. **Zero-capture enrolment is not free but is not hopeless.**  Enrolling from
+   the manufacturer pack shot alone gives 29.8 % on the old trunk; four real
+   photographs after it take that to 62.8 %.  The seed of Tier 2 question 3 in
+   `docs/research/07-research-roadmap.md`.
+
+**What this does not say.**  These are shelf photographs under supermarket
+lighting, not mat crops under a ring light, and MobileCLIP-B is a ViT-B — an
+order of magnitude heavier than the MobileNetV3 the till ships.  Whether it holds
+interactive latency on a Raspberry Pi 5 is unmeasured, and until it is, the
+result bounds what the *representation* can do rather than what the *till* will
+do.  `research/bench.py` answers that and needs no products.
 
 **The synthetic threshold does not transfer.**  E5 on synthetic data sits in the
 `insufficient_data` state — the split yields one enrolled product and two
