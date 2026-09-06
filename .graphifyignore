@@ -1,0 +1,29 @@
+# What graphify must not walk.  Merged with .gitignore, which already excludes
+# .venv/, dist/, models/*.pt, research/data/ and the generated paper artefacts.
+
+# Vendored Swift: Xcode's SwiftPM checkout of GRDB, ~387k lines, not our code.
+ios/AICashier/build/
+ios/AICashier/.build/
+ios/AICashier/AICashier.xcodeproj/
+
+# Screenshots and product photographs.  Images are the vision-extraction path -
+# the only expensive part of a run - and every surface they show is described in
+# words in docs/kb/.  Excluded for cost, not for irrelevance.
+docs/shots/
+docs/assets/
+site/public/img/
+ios/AICashier/Resources/
+paper/figures/
+build/windows/icon-256.png
+build/windows/icon.ico
+
+# Binary payloads with nothing to parse.
+assets/fonts/
+server/static/fonts/
+site/public/fonts/
+models/
+
+# Tool caches.
+site/.wrangler/
+.pytest_cache/
+graphify-out/

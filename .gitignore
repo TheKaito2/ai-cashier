@@ -41,3 +41,8 @@ ios/**/.build/
 # PyInstaller work dir
 build/pyinstaller/
 build/AICashier/
+
+# wrangler local cache: holds the Cloudflare account id and the account email
+site/.wrangler/
+graphify-out/
+ios/AICashier/build/

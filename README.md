@@ -95,7 +95,7 @@ research/            experiments, capture protocol, benchmark
 paper/               LaTeX draft; tables and figures are generated, never typed
 tools/               export the backbone, calibrate the scale, print the markers
 deploy/              systemd unit for the Pi
-tests/               175 tests
+tests/               178 tests
 ios/                 the Swift till (SwiftUI, Core ML, GRDB) and its fixture-checked tests
 site/                the landing page
 build/windows/       PyInstaller spec, Inno Setup script, CI smoke test
@@ -103,6 +103,8 @@ assets/fonts/        IBM Plex Sans Thai + Plex Mono (OFL), bundled by every surf
 docs/DESIGN.md       the one token table and type scale the till, dashboard, phone and site share
 docs/HARDWARE.md     what to buy, how to wire it, how to calibrate it, Pi OS setup
 docs/research/       the dossier: law, market, literature, venues, architecture review
+docs/kb/             the knowledge base: pipeline, contracts, decisions, gotchas, runbooks
+CLAUDE.md            start here: the invariants, the ten commands, where to look next
 ```
 
 ## Notable fixes carried in from version 3
@@ -138,7 +140,7 @@ run be mistaken for a Pi run.
 pytest tests/ -v
 ```
 
-167 checks over the money and the recognition: cart arithmetic, VAT, stock
+178 checks over the money and the recognition: cart arithmetic, VAT, stock
 decrement, transaction rollback, concurrent restocks, unique sale ids, PromptPay
 checksums, gallery matching and the frozen centre, open-set rejection, fusion
 and the one-item weight rule, the HX711 bit protocol against a fake GPIO chip,
