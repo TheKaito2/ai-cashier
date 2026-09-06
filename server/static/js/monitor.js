@@ -67,7 +67,10 @@
         const counts = {};
         events.forEach(e => { counts[e.kind] = (counts[e.kind] || 0) + 1; });
         Charts.bars($('kindsChart'), Object.entries(counts).map(([k, v]) => ({
-            label: k.replace('_', ' '), value: v, cls: KIND[k] === 'warn' ? 'bar--warn' : '' })));
+            // the chart already knows which kinds matter; use both colours, or a
+            // call for staff sits in the same amber as a routine refusal
+            label: k.replace('_', ' '), value: v,
+            cls: KIND[k] === 'bad' ? 'bar--bad' : KIND[k] === 'warn' ? 'bar--warn' : '' })));
         Charts.columns($('abstainChart'), Charts.byDay(events.filter(e => e.kind === 'abstention'), 14, () => 1), { height: 150 });
 
         // a call for staff is the one event somebody has to act on, so it does

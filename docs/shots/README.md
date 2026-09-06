@@ -34,7 +34,7 @@ Generated during versions 2 and 3.  Terminal images come from
 | `v4` | The first version 4 till — scanning, an unknown item, the enrol dialog — plus landing, inventory and analytics | `docs/tools/shoot_qt.py`, `docs/tools/shoot_web.py` |
 | `v4b` | The PySide6 port of the till, and enrolment | `docs/tools/shoot_qt.py` |
 | `v4c` | The till, enrolment and payment before the identity redesign | `docs/tools/shoot_qt.py` |
-| `v4d` | **Current.**  The receipt-and-instrument till (idle, enrol, payment, paid receipt), and the dashboard: overview light and dark, inventory, analytics light and dark, monitor, plus the landing page | `docs/tools/shoot_qt.py` and `docs/tools/shoot_web.py` |
+| `v4d` | **Current.**  The receipt-and-instrument till (idle, enrol, payment, paid receipt), and the dashboard: overview light and dark, inventory, analytics light and dark, monitor in both themes (`05-monitor*`, shot against a throwaway shop seeded with a staff call so the escalation banner is visible), plus the landing page | `docs/tools/shoot_qt.py` and `docs/tools/shoot_web.py` |
 | `v4d/m` | The same dashboard pages at a 390-pixel phone width — overview, inventory, analytics, and the site in dark | `SHOT_W=390 SHOT_H=844 python docs/tools/shoot_web.py` |
 | `ios` | The iPhone app: a scan in progress, detections on the frame, the till, takings, inventory, and the till in dark | `xcrun simctl io booted screenshot`, with `--demo-seed` and `--demo-scan` |
 
