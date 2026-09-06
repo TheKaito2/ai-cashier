@@ -86,3 +86,69 @@ def test_every_registered_encoder_can_be_named_on_the_command_line():
     for name in (*TorchEmbedder.BACKBONES, *TorchEmbedder.CLIP_BACKBONES,
                  *TorchEmbedder.HUB_BACKBONES):
         assert name in done.stdout, f"{name} cannot be exported from the command line"
+
+
+# ------------------------------------------------- the preprocessing contract
+
+def test_an_exported_graph_carries_the_statistics_it_was_trained_with(tmp_path):
+    """Normalisation happens outside the network, so the graph has to say which
+    it wants.
+
+    This was found the hard way: MobileCLIP normalises with mean 0 and standard
+    deviation 1, the ONNX runner assumed ImageNet, and the exported encoder
+    scored a cosine of 0.19 against the torch model it came from. It still
+    returned 512 numbers - just meaningless ones - and the failure reads as
+    "that encoder is bad" rather than "we normalised it wrongly". The only
+    reason it never bit before is that every previously exported backbone
+    happened to be ImageNet-normalised.
+    """
+    import onnx
+    from recognition.embedder import MEAN, STD, OnnxEmbedder
+
+    out = tmp_path / "mobilenet_v3_small.onnx"
+    TorchEmbedder("mobilenet_v3_small").export_onnx(out)
+
+    stamped = {p.key: p.value for p in onnx.load(str(out), load_external_data=False).metadata_props}
+    assert "mean" in stamped and "std" in stamped, "the graph does not say how to feed it"
+
+    loaded = OnnxEmbedder(out)
+    assert loaded.mean == pytest.approx(MEAN, abs=1e-5)
+    assert loaded.std == pytest.approx(STD, abs=1e-5)
+    assert loaded.input == 224
+
+
+def test_a_graph_exported_before_the_stamp_still_loads_as_imagenet(tmp_path):
+    """Older exports carry no statistics; assuming ImageNet is what they were."""
+    import onnx
+    from recognition.embedder import MEAN, OnnxEmbedder
+
+    out = tmp_path / "legacy.onnx"
+    TorchEmbedder("mobilenet_v3_small").export_onnx(out)
+    model = onnx.load(str(out), load_external_data=False)
+    del model.metadata_props[:]
+    onnx.save(model, str(out))
+
+    assert OnnxEmbedder(out).mean == pytest.approx(MEAN, abs=1e-5)
+
+
+def test_the_exported_encoder_agrees_with_the_model_it_came_from(tmp_path):
+    """The check that caught the bug above, kept as a test."""
+    import numpy as np
+    from recognition.embedder import OnnxEmbedder
+    from recognition.proposer import BackgroundSubtractionProposer
+    from tests.synthetic import CATALOGUE, empty_mat, scene
+
+    torch_model = TorchEmbedder("mobilenet_v3_small")
+    out = tmp_path / "agree.onnx"
+    torch_model.export_onnx(out)
+
+    proposer = BackgroundSubtractionProposer()
+    proposer.calibrate(empty_mat())
+    crops = []
+    for i, sku in enumerate(list(CATALOGUE)[:3]):
+        frame = scene([sku], seed=900 + i)
+        crops.append(max(proposer.propose(frame), key=lambda p: p.area_px).crop(frame))
+
+    a, b = torch_model.embed(crops), OnnxEmbedder(out).embed(crops)
+    cos = (a * b).sum(1) / (np.linalg.norm(a, axis=1) * np.linalg.norm(b, axis=1))
+    assert cos.min() > 0.999, f"the export disagrees with torch (worst cosine {cos.min():.4f})"

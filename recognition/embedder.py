@@ -152,7 +152,15 @@ class TorchEmbedder:
         return out.detach().cpu().numpy().astype(np.float32)
 
     def export_onnx(self, path: str | Path) -> Path:
-        """Freeze to ONNX so the Pi never has to import torch."""
+        """Freeze to ONNX so the Pi never has to import torch.
+
+        The normalisation travels with the graph.  Preprocessing happens outside
+        the network, so an exported encoder that does not carry its own mean and
+        standard deviation is a trap: feed a CLIP tower ImageNet statistics and
+        it still returns 512 numbers, just meaningless ones.  That failure is
+        silent, and it reads as "this encoder is bad" rather than "we normalised
+        it wrongly".
+        """
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         dummy = self._torch.zeros(1, 3, self.input, self.input, device=self.device)
@@ -161,7 +169,17 @@ class TorchEmbedder:
             input_names=["images"], output_names=["embedding"],
             dynamic_axes={"images": {0: "batch"}, "embedding": {0: "batch"}},
             opset_version=17)
+        self._stamp_preprocessing(path)
         return path
+
+    def _stamp_preprocessing(self, path: Path) -> None:
+        import onnx
+        model = onnx.load(str(path), load_external_data=False)
+        for key, value in (("mean", ",".join(f"{v:.6f}" for v in np.ravel(self.mean))),
+                           ("std", ",".join(f"{v:.6f}" for v in np.ravel(self.std)))):
+            entry = model.metadata_props.add()
+            entry.key, entry.value = key, value
+        onnx.save(model, str(path))
 
 
 class OnnxEmbedder:
@@ -182,10 +200,21 @@ class OnnxEmbedder:
             probe = np.zeros((1, 3, self.input, self.input), np.float32)
             dim = self.session.run(None, {self._input: probe})[0].shape[-1]
         self.dim = int(dim)
+        # graphs exported before the statistics were stamped are ImageNet ones
+        meta = self.session.get_modelmeta().custom_metadata_map or {}
+        self.mean = self._stat(meta.get("mean"), MEAN)
+        self.std = self._stat(meta.get("std"), STD)
         self.name = Path(path).stem
+
+    @staticmethod
+    def _stat(raw: str | None, fallback: np.ndarray) -> np.ndarray:
+        if not raw:
+            return fallback
+        return np.array([float(v) for v in raw.split(",")], dtype=np.float32)
 
     def embed(self, crops: list[np.ndarray]) -> np.ndarray:
         if not crops:
             return np.zeros((0, self.dim), dtype=np.float32)
-        out = self.session.run(None, {self._input: preprocess(crops, size=self.input)})[0]
+        out = self.session.run(None, {self._input: preprocess(
+            crops, size=self.input, mean=self.mean, std=self.std)})[0]
         return np.asarray(out, dtype=np.float32)

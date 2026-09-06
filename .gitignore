@@ -46,3 +46,8 @@ build/AICashier/
 site/.wrangler/
 graphify-out/
 ios/AICashier/build/
+
+# research-only encoders: large, regenerable with tools/export_embedder.py
+models/mobileclip*
+models/dinov2*
+models/siglip*
