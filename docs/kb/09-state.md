@@ -35,7 +35,7 @@ Not blocked by it, and already done instead: E9 on a public dataset, which is wh
 | 41 | **Zero-capture enrolment** reaches 82.9 % top-1 on public photographs with MobileCLIP-B — enrolling from the manufacturer's image with no capture at all.  Whether that survives the rig's own lighting and mat is unmeasured, and it would remove the capture step from enrolment entirely | `docs/kb/05-research.md` |
 | 37 | **E1 has never run on a photograph.**  `research/experiments.py:e1_closed_set_baseline` exists and is tested, but it needs the twelve legacy products photographed with `capture.py --in-legacy-model`, ultralytics installed, and the gitignored AGPL `models/*.pt` present.  Until then it returns `insufficient_data` and `paper/tables/e1_closed_set.tex` is a "NOT RUN" stub | `docs/kb/05-research.md` |
 | — | **The escalation threshold has a curve but not a real one.**  `research/experiments.py:_escalation_sweep` now measures what each baht line buys, and `paper/tables/e6_escalation.tex` prints it — but on synthetic products with three unseen SKUs.  The shape is right; the numbers need the capture session | `docs/kb/06-decisions.md` |
-| — | `tools/export_embedder.py`, `tools/export_coreml.py`, `tools/export_fixtures.py`, `tools/seed_demo.py` and `tools/make_marker.py` still have no tests — each writes into the repository, so testing them needs the output paths made injectable first | — |
+| — | `tools/export_coreml.py` has no test: it needs `.venv-coreml` and coremltools, which CI does not have.  Everything else under `tools/` is now covered | — |
 
 Closed on 6 September 2026: the Cloudflare account id and account email that were
 committed in `site/.wrangler/cache/wrangler-account.json` are gone from the whole

@@ -44,8 +44,14 @@ def largest_crop(proposer, frame):
     return best.crop(frame), best.box
 
 
-def main() -> int:
-    (OUT / "crops").mkdir(parents=True, exist_ok=True)
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--out", type=Path, default=OUT,
+                    help="where the fixtures go (default: the iOS test bundle)")
+    args = ap.parse_args(argv)
+    out_dir = args.out
+    (out_dir / "crops").mkdir(parents=True, exist_ok=True)
     proposer = BackgroundSubtractionProposer()
     proposer.calibrate(empty_mat())
     embedder = OnnxEmbedder(paths.EMBEDDER)
@@ -55,7 +61,7 @@ def main() -> int:
         for n, frame in enumerate(views(sku, K, seed=100) + views(sku, 1, seed=900)):
             crop, _ = largest_crop(proposer, frame)
             name = f"{sku}-{n}"
-            cv2.imwrite(str(OUT / "crops" / f"{name}.png"), crop)
+            cv2.imwrite(str(out_dir / "crops" / f"{name}.png"), crop)
             crops[name] = {"sku": sku, "role": "enrol" if n < K else "query"}
             embeddings[name] = embedder.embed([crop])[0].round(6).tolist()
 
@@ -75,8 +81,8 @@ def main() -> int:
                           "ranking": [[m.sku_id, round(m.score, 5)] for m in matches]}
 
     mat, two = empty_mat(), scene(["pepsi", "tasto-seaweed"], seed=930)
-    cv2.imwrite(str(OUT / "mat.png"), mat)
-    cv2.imwrite(str(OUT / "scene.png"), two)
+    cv2.imwrite(str(out_dir / "mat.png"), mat)
+    cv2.imwrite(str(out_dir / "scene.png"), two)
     boxes = [list(p.box) for p in proposer.propose(two)]
 
     promptpay = [
@@ -106,12 +112,12 @@ def main() -> int:
         "promptpay": promptpay,
         "crc16_check": {"input": "123456789", "value": crc16_ccitt("123456789")},
     }
-    (OUT / "fixtures.json").write_text(json.dumps(fixtures, indent=1))
+    (out_dir / "fixtures.json").write_text(json.dumps(fixtures, indent=1))
     n_ok = sum(1 for n, e in expected.items() if e["top1"] == crops[n]["sku"])
     print(f"  {len(crops)} crops, {len(expected)} queries, {n_ok} top-1 correct among enrolled, "
           f"stranger best score {expected[f'{STRANGER}-{K}']['score']:.3f} "
           f"(accepted={expected[f'{STRANGER}-{K}']['accepted']}), {len(boxes)} scene boxes")
-    print(f"  written to {OUT}")
+    print(f"  written to {out_dir}")
     return 0
 
 
