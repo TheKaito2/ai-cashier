@@ -91,6 +91,8 @@ def test_every_registered_encoder_can_be_named_on_the_command_line():
 # ------------------------------------------------- the preprocessing contract
 
 def test_an_exported_graph_carries_the_statistics_it_was_trained_with(tmp_path):
+    onnx = pytest.importorskip("onnx", reason="requirements-research.txt")
+    pytest.importorskip("onnxscript", reason="torch.onnx.export needs it")
     """Normalisation happens outside the network, so the graph has to say which
     it wants.
 
@@ -102,7 +104,6 @@ def test_an_exported_graph_carries_the_statistics_it_was_trained_with(tmp_path):
     reason it never bit before is that every previously exported backbone
     happened to be ImageNet-normalised.
     """
-    import onnx
     from recognition.embedder import MEAN, STD, OnnxEmbedder
 
     out = tmp_path / "mobilenet_v3_small.onnx"
@@ -119,7 +120,8 @@ def test_an_exported_graph_carries_the_statistics_it_was_trained_with(tmp_path):
 
 def test_a_graph_exported_before_the_stamp_still_loads_as_imagenet(tmp_path):
     """Older exports carry no statistics; assuming ImageNet is what they were."""
-    import onnx
+    onnx = pytest.importorskip("onnx", reason="requirements-research.txt")
+    pytest.importorskip("onnxscript", reason="torch.onnx.export needs it")
     from recognition.embedder import MEAN, OnnxEmbedder
 
     out = tmp_path / "legacy.onnx"
@@ -133,6 +135,7 @@ def test_a_graph_exported_before_the_stamp_still_loads_as_imagenet(tmp_path):
 
 def test_the_exported_encoder_agrees_with_the_model_it_came_from(tmp_path):
     """The check that caught the bug above, kept as a test."""
+    pytest.importorskip("onnxscript", reason="torch.onnx.export needs it")
     import numpy as np
     from recognition.embedder import OnnxEmbedder
     from recognition.proposer import BackgroundSubtractionProposer
