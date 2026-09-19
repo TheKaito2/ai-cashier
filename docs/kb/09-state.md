@@ -55,6 +55,12 @@ retraining the detector and revalidating the other twenty, against appending
 five vectors and touching nothing.  That is the comparison that survives
 scrutiny, and it is what E8 should be written to say.
 
+**The second camera is designed, not built.**  `docs/HARDWARE.md` described two
+views being combined by track id as though it worked; it does not — the till
+reads one camera source and nothing combines two.  Corrected on 19 September 2026,
+and the second webcam and powered hub moved to a "not yet" list so nobody buys
+hardware the software cannot use.
+
 ## What this laptop cannot verify
 
 Stated here so no future session claims otherwise.

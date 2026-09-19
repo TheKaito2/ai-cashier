@@ -20,15 +20,26 @@ Prices are indicative Thai retail and should be checked before ordering.
 
 | Part | Spec | ~THB | Why this one |
 |---|---|---|---|
-| Load cell | **single-point 5 kg**, aluminium bar | 150–300 | See below — not the 50 kg half-bridges |
-| HX711 | 24-bit ADC breakout | 50–120 | Standard; `recognition/scale.py` bit-bangs it over `lgpio` (the Pi 5 GPIO library) |
-| Ring light | 15–20 cm, diffused, ~5000 K, dimmable | 400–900 | The cheapest accuracy you can buy |
-| Second webcam | 1080p, manual focus if possible | 500–1200 | Front view, for bottles and cans |
-| Powered USB hub | 4-port, own supply | 300–600 | Two cameras exceed the Pi's per-port budget |
+| Load cell | **single-point 5 kg**, aluminium bar, 4-wire; **rated platform size at least as large as the weighing plate** | 150–300 | See below — not the 50 kg half-bridges, and not bigger than it needs to be |
+| HX711 | 24-bit ADC breakout, header pins already soldered unless you solder | 50–120 | Standard; `recognition/scale.py` bit-bangs it over `lgpio` (the Pi 5 GPIO library) |
+| Weighing plate | flat and rigid, covering the whole product area; 5 mm acrylic or 3 mm aluminium | 150–400 *(rough)* | Its own mass is dead load on the cell; keep it light |
+| Base plate | stiffer and heavier than the top; 10–12 mm plywood or MDF | 100–250 *(rough)* | A base that flexes under load reads as drift |
+| Spacers and bolts | matching the cell's threaded holes (check the listing — usually M4 or M5), two per end | 50–120 *(rough)* | The gap they make is what stops the plate resting on anything but the cell |
+| Jumper wires | female-to-female Dupont, at least four | 30–60 | HX711 to the Pi's GPIO header |
+| Kitchen scale | digital, 1 g resolution or better, 3–5 kg | 200–500 *(rough)* | Calibration needs a known mass and verification a *different* one; the capture session needs every product's `--weight` before the rig exists |
+| Ring light | 15–20 cm, diffused, ~5000 K, dimmable, **on its own wall adapter** | 400–900 | The cheapest accuracy you can buy; do not power it from the Pi |
+| Overhead stand | arm or frame holding the webcam and the ring light above the mat | 300–800 *(rough)* | The mat must fill the frame with ~10 % margin, and neither may move once set |
 | Pi 5 active cooler | official or equivalent | 250–400 | **Required** — see thermals |
 | PSU | 5 V / 5 A USB-C (official Pi 5 supply) | 500–800 | Under-powering a Pi 5 causes faults that look like software bugs |
-| Mat | matte black or mid-grey, non-reflective, A3 | 100–250 | Gloss produces specular highlights that move with the product |
+| Mat | matte, plain black or mid-grey, **no grid lines**, A3 | 100–250 | Gloss produces specular highlights that move with the product; a cutting-mat grid is texture the proposer has to ignore |
 | Markers | four printed ArUco, laminated | ~20 | `python tools/make_marker.py` - one per mat corner |
+
+**Not yet — the software cannot use them.**
+
+| Part | Spec | ~THB | Why it waits |
+|---|---|---|---|
+| Second webcam | 1080p, manual focus if possible | 500–1200 | Planned for bottle and can labels, but nothing in the till reads a second camera yet: `config/settings.json` has one source and no code path combines two views |
+| Powered USB hub | 4-port, own supply | 300–600 | Only needed once there are two cameras |
 
 **Why a 5 kg single-point cell, not 4 × 50 kg half-bridges.** The four-cell kit is
 what most tutorials use because it comes from bathroom scales, but its full range
@@ -36,7 +47,25 @@ is 200 kg. Spread over a 24-bit ADC that is roughly 12 mg per count *in theory*
 and far worse in practice once noise is included — and a 75 g crisp packet sits in
 the bottom 0.04 % of the range, where the cell is least linear. A single 5 kg cell
 puts the same packet at 1.5 % of range. Since the whole point of weighing is to
-tell 75 g from 98 g, resolution at low mass is the only specification that matters.
+tell 75 g from 98 g, resolution at low mass is what rules the bathroom kit out.
+
+**Why 5 kg rather than 10 kg.**  Bigger is not free.  Creep and temperature drift
+are quoted as a fraction of *full scale* (see *Measuring drift* below), so doubling
+the capacity doubles them: roughly 1 g and 1.5 g on a 5 kg cell become 2 g and 3 g
+on a 10 kg one — level with `CELL_SIGMA_G` (2 g) in `recognition/fusion.py`, and
+closing on the 4 g the basket check allows per item.  At that point the till
+starts accusing honest customers.  The capacity has to cover the plate plus the
+whole basket, because the goods stay on the pan until PAY; for snacks and
+shop-size drinks (55–622 g each here) that is well under 5 kg.  Go to 10 kg only
+if baskets routinely carry 1.5 L bottles or multi-packs.
+
+**Platform size is the specification people miss.**  A single-point cell
+compensates for where on the plate an item sits, but only across the platform it
+is rated for.  The mat is A3 with markers in the corners; put that on a cell rated
+for a small platform and the same packet reads differently at the centre and at a
+corner.  Buy a cell whose listing states a platform at least as large as the
+plate.  If the listing does not say, test it: weigh one mass at the centre and at
+each corner — the readings should agree within 2 g.
 
 ---
 
@@ -53,9 +82,11 @@ on the side and invisible. Mount the second camera at the front of the stand,
 roughly at mid-product height, tilted slightly down, with its field of view
 overlapping the mat.
 
-The two views are combined by track id, not by hoping: an item gets one identity
-and both cameras contribute votes to it, so one physical bottle produces one cart
-line. That is why tracking had to exist before the second camera was worth adding.
+**Not built yet.**  The design is to combine the two views by track id, so that an
+item gets one identity and both cameras vote on it and one physical bottle
+produces one cart line — which is why tracking had to exist first.  But no code
+path reads a second camera today; `recognition/proposer.py:mask_above_mat`, the
+privacy mask a side camera would need, is the only part that exists.
 
 ### Light ring
 Above and slightly forward of the mat, diffused, angled to avoid throwing the
