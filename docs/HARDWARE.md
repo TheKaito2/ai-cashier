@@ -20,18 +20,18 @@ Prices are indicative Thai retail and should be checked before ordering.
 
 | Part | Spec | ~THB | Why this one |
 |---|---|---|---|
-| Load cell | **single-point 5 kg**, aluminium bar, 4-wire; **rated platform size at least as large as the weighing plate** | 150–300 | See below — not the 50 kg half-bridges, and not bigger than it needs to be |
+| Load cell | **Zemic L6D-C3-5kg** (single-point, rated platform 250 × 350 mm); listed equivalents Tedea 1022, Keli AMI, Mavin NA1 | quote on request | See below — a cell with a published platform rating and accuracy class, not the unspecified hobby bar |
 | HX711 | 24-bit ADC breakout, header pins already soldered unless you solder | 50–120 | Standard; `recognition/scale.py` bit-bangs it over `lgpio` (the Pi 5 GPIO library) |
-| Weighing plate | flat and rigid, covering the whole product area; 5 mm acrylic or 3 mm aluminium | 150–400 *(rough)* | Its own mass is dead load on the cell; keep it light |
+| Weighing plate | flat and rigid, **no larger than 250 × 350 mm** (A4 fits inside); 5 mm acrylic or 3 mm aluminium | 150–400 *(rough)* | Its own mass is dead load on the cell; larger than the rated platform and off-centre items read wrong |
 | Base plate | stiffer and heavier than the top; 10–12 mm plywood or MDF | 100–250 *(rough)* | A base that flexes under load reads as drift |
-| Spacers and bolts | matching the cell's threaded holes (check the listing — usually M4 or M5), two per end | 50–120 *(rough)* | The gap they make is what stops the plate resting on anything but the cell |
+| Spacers and bolts | **four M6 bolts, class 8.8**, two per end, torqued to 6 N·m, plus spacers | 50–120 *(rough)* | The L6D's holes are M6 through; the gap the spacers make is what stops the plate resting on anything but the cell |
 | Jumper wires | female-to-female Dupont, at least four | 30–60 | HX711 to the Pi's GPIO header |
 | Kitchen scale | digital, 1 g resolution or better, 3–5 kg | 200–500 *(rough)* | Calibration needs a known mass and verification a *different* one; the capture session needs every product's `--weight` before the rig exists |
 | Ring light | 15–20 cm, diffused, ~5000 K, dimmable, **on its own wall adapter** | 400–900 | The cheapest accuracy you can buy; do not power it from the Pi |
 | Overhead stand | arm or frame holding the webcam and the ring light above the mat | 300–800 *(rough)* | The mat must fill the frame with ~10 % margin, and neither may move once set |
 | Pi 5 active cooler | official or equivalent | 250–400 | **Required** — see thermals |
 | PSU | 5 V / 5 A USB-C (official Pi 5 supply) | 500–800 | Under-powering a Pi 5 causes faults that look like software bugs |
-| Mat | matte, plain black or mid-grey, **no grid lines**, A3 | 100–250 | Gloss produces specular highlights that move with the product; a cutting-mat grid is texture the proposer has to ignore |
+| Mat | matte, plain black or mid-grey, **no grid lines**, cut to the plate — **not A3** | 100–250 | Gloss produces specular highlights that move with the product; a cutting-mat grid is texture the proposer has to ignore |
 | Markers | four printed ArUco, laminated | ~20 | `python tools/make_marker.py` - one per mat corner |
 
 **Not yet — the software cannot use them.**
@@ -61,11 +61,42 @@ if baskets routinely carry 1.5 L bottles or multi-packs.
 
 **Platform size is the specification people miss.**  A single-point cell
 compensates for where on the plate an item sits, but only across the platform it
-is rated for.  The mat is A3 with markers in the corners; put that on a cell rated
-for a small platform and the same packet reads differently at the centre and at a
-corner.  Buy a cell whose listing states a platform at least as large as the
-plate.  If the listing does not say, test it: weigh one mass at the centre and at
-each corner — the readings should agree within 2 g.
+is rated for.  Put a larger plate on it and the same packet reads differently at
+the centre and at a corner.  Whatever you buy, test it: weigh one mass at the
+centre and at each corner — the readings should agree within 2 g.
+
+**What was found when this was checked (19 September 2026).**  The 5 kg cells the
+Thai hobby shops sell — the 80 × 12.7 mm aluminium bar and the YZC-133, around
+100 THB — publish **no platform rating and no accuracy figures at all**.  The
+nearest thing to a datasheet for that class of cell (Phidgets 3133, 5 kg) gives
+±2.5 g repeatability, 2.5 g non-linearity, 2.5 g hysteresis and a temperature
+effect on zero of 500 mg per °C — each of the first three already past the 2 g
+the till budgets for the cell, and the last three times worse than the figure
+this document used to assume.
+
+The **Zemic L6D** is the specified alternative, and Thai scale distributors stock
+it in 5 kg (ScalesThai, Mainscale, GPM Scales; prices are quote-on-request).  Its
+datasheet gives a maximum platform of **250 × 350 mm**, combined error within
+±0.023 % of full scale — about ±1.2 g on the 5 kg model — 150 % safe overload,
+and the same red/black/white/green wiring as the diagram below.  Mainscale lists
+the Tedea 1022, Keli AMI and Mavin NA1 as equivalents.
+
+**So the plate cannot be A3.**  A3 is 297 × 420 mm; the L6D is rated to
+250 × 350.  A4 (210 × 297) fits inside it with room to spare.  The obvious larger
+cell, the Zemic L6E, is rated for 400 × 400 mm but its smallest model is 50 kg,
+where drift quoted as a fraction of full scale becomes ten times worse.  No
+affordable single cell covers A3 — which is the one situation where four corner
+cells, each read by its own HX711, earns its extra complexity.
+
+A smaller plate leaves less room for 60 mm corner markers.  Print them smaller
+(`python tools/make_marker.py --mm 40`) or mount them on a fixed frame around
+the plate, flush with its surface, so they stay on the measuring plane without
+being weighed.
+
+**Excitation.**  The L6D datasheet recommends 5–12 V.  Keep the HX711 on the
+Pi's 3.3 V as wired below anyway: powering it from 5 V puts a 5 V logic level on
+a 3.3 V GPIO pin.  At 3.3 V the bridge gives about 6.6 mV at full scale, which is
+well inside the HX711's range — less signal, not a problem.
 
 ---
 
