@@ -7,6 +7,29 @@ Prices are indicative Thai retail and should be checked before ordering.
 
 ---
 
+## Decision, 23 September 2026 — the defence build buys nothing
+
+The final project defence runs on **the hardware already owned**: the Raspberry Pi 5,
+the 14-inch touchscreen and the USB webcam from version 3.  No load cell is bought
+before it.
+
+What that costs, stated so nobody claims otherwise on the day:
+
+- The till runs `--scale none` or the simulated scale.  With no scale,
+  `recognition/fusion.py:fuse` is given `measured_weight_g=None` and decides on
+  appearance and size alone, and `scanner/ui/main_window.py:_basket_weight_ok`
+  returns true without running `recognition/fusion.py:verify_basket` at all — the
+  swap check is **absent, not passing**, and it is silent about it.  Say so on the
+  day rather than letting a panellist assume the basket was weighed.
+- Every mass number in the paper and in `docs/kb/05-research.md` stays synthetic.
+  E6 and E7 are unaffected by this decision because they were already synthetic.
+- Nothing in the recognition claim depends on the scale: the encoder result, the
+  abstention result and zero-capture enrolment are all camera-only.
+
+The bill of materials below stays as the build order for after the defence.
+
+---
+
 ## Bill of materials
 
 ### Already have
