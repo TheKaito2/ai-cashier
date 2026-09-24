@@ -26,7 +26,7 @@ from PySide6.QtWidgets import QDialog, QMessageBox, QSizePolicy
 import paths
 import server.services.database as database
 import server.services.restrictions as restrictions
-from recognition.fusion import Decision, FusedCandidate, Status
+from recognition.fusion import Decision, FusedCandidate, FusionConfig, Status
 from recognition.gallery import MIN_SKUS_TO_FREEZE, SkuGallery
 from recognition.pipeline import RecognisedItem, priors_from_products
 from scanner.ui import main_window as mw
@@ -95,8 +95,8 @@ def till(qapp, tmp_path, monkeypatch):
 
     windows = []
 
-    def build(scale=None):
-        window = mw.MainWindow(scale=scale)
+    def build(scale=None, **kw):
+        window = mw.MainWindow(scale=scale, **kw)
         assert str(tmp_path) in window.db.db_path, "the till opened the shop's own database"
         windows.append(window)
         return window
@@ -172,6 +172,55 @@ def shelve(window, **product):
 def put_in_cart(window, sku_id, quantity=1):
     window.cart.add_product(window._product_for(seen(sku_id)), quantity)
     window._refresh_cart()
+
+
+# ------------------------------------------------------- the rejection threshold
+
+def test_a_threshold_from_before_the_centring_fix_is_not_used(till):
+    """0.38 was the placeholder before queries were centred like the gallery.
+    Left in a shop database it is below a stranger's score, so it rejects
+    nothing and the till prices whatever it is shown."""
+    window = till()
+    window.db.set_setting("reject_below_cosine", 0.3808)
+    rebuilt = window._build_pipeline()
+    assert rebuilt.cfg.reject_below_cosine == FusionConfig().reject_below_cosine
+
+
+def test_a_measured_threshold_is_used(till):
+    """The pair: without it the test above would pass against code that ignored
+    the setting entirely."""
+    window = till()
+    window.db.set_setting("reject_below_cosine", 0.8123)
+    rebuilt = window._build_pipeline()
+    assert rebuilt.cfg.reject_below_cosine == 0.8123
+
+
+# ------------------------------------------------------- one item at a time
+
+def test_single_item_mode_refuses_two_things_rather_than_choosing_one(till):
+    """Picking one of two would drop a real product from a till, which is an
+    unscanned item leaving the shop.  Picking the *largest* - the obvious
+    implementation - would hand the win to whichever junk region outlived the
+    proposer's objectness rules.  So it refuses and says what it saw."""
+    window = till(items="single")
+
+    window._on_scanned([seen("pepsi"), seen("crystal-water")], None, None)
+
+    assert window.detected == []
+    assert "2 things on the mat" in window.status.text()
+
+
+def test_single_item_mode_passes_one_item_through(till):
+    """The pair that stops the test above passing on a till that shows nothing."""
+    window = till(items="single")
+    window._on_scanned([seen("pepsi")], None, None)
+    assert [i.sku_id for i in window.detected] == ["pepsi"]
+
+
+def test_multi_item_is_the_default_and_keeps_both(till):
+    window = till()
+    window._on_scanned([seen("pepsi"), seen("crystal-water")], None, None)
+    assert len(window.detected) == 2
 
 
 # ------------------------------------------------------- what may be sold

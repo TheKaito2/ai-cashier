@@ -54,8 +54,40 @@ class BackgroundSubtractionProposer:
     def __init__(self, min_area_px: int = 4000, diff_threshold: int = 28,
                  blur: int = 5, max_proposals: int = 12, downscale: int = 2,
                  shadow_chroma_eps: float = 0.04,
-                 shadow_ratio: tuple[float, float] = (0.55, 0.95)):
+                 shadow_ratio: tuple[float, float] = (0.55, 0.95),
+                 max_area_frac: float = 0.35, min_fill_ratio: float = 0.45,
+                 max_aspect: float = 6.0, reject_border_px: int = 8,
+                 roi: Box | None = None):
         self.min_area_px = min_area_px
+        #: Everything below is an objectness test, and the proposer had none
+        #: until a real rig was switched on.  "Differs from the empty mat and is
+        #: bigger than 4000 px" was the whole definition of a product, so on a
+        #: white table the table's own edges, a cable and a moving shadow all
+        #: qualified and the till narrated products that were not there.
+        #:
+        #: An upper bound.  A packet occupies a part of the mat; a contour
+        #: covering a third of it is the lighting changing, or the mat photograph
+        #: no longer matching the mat.
+        self.max_area_frac = max_area_frac
+        #: The gate measures `contourArea` but the box that gets emitted is the
+        #: bounding rectangle.  A diagonal sliver or a ring of shadow around a
+        #: region passes the area test and then hands the embedder a box many
+        #: times its own size, full of mat.  Requiring the contour to fill its
+        #: own box throws those away and keeps solid things.
+        self.min_fill_ratio = min_fill_ratio
+        #: Long and thin is a table edge, a cable or the seam of a shadow.  No
+        #: packet the till is meant to price is six times longer than it is wide.
+        self.max_aspect = max_aspect
+        #: A product sits on the mat, inside the frame.  Anything reaching the
+        #: boundary is the world beyond the mat leaking in - and if the camera is
+        #: aimed so tightly that real products touch the edge, the fix is the
+        #: aim, not a proposal for the floor.
+        self.reject_border_px = reject_border_px
+        #: Where the mat is, in full-frame pixels, or None for the whole frame.
+        #: Set it from `rig.mat_roi`.  The mask outside is zeroed rather than the
+        #: frame being cropped, so every box stays in full-frame coordinates and
+        #: the tracker, the crops, metrology and the overlay need no adjustment.
+        self.roi = roi
         self.diff_threshold = diff_threshold
         #: A shadow darkens the mat without changing its colour: same
         #: chromaticity (RGB / sum), lower intensity.  Pixels that fit that
@@ -128,20 +160,51 @@ class BackgroundSubtractionProposer:
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
+        if self.roi is not None:
+            x0, y0, x1, y1 = self._search_area(mask.shape)
+            outside = np.ones(mask.shape, dtype=bool)
+            outside[y0:y1, x0:x1] = False
+            mask[outside] = 0
 
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        d = self.downscale
+        search = self._search_area(mask.shape)          # in mask pixels
+        sx0, sy0, sx1, sy1 = search
+        search_px = max(1, (sx1 - sx0) * (sy1 - sy0))
+
         proposals = []
         for c in contours:
             area = int(cv2.contourArea(c))
-            if area * self.downscale ** 2 < self.min_area_px:
+            if area * d ** 2 < self.min_area_px:
+                continue
+            if area / search_px > self.max_area_frac:
                 continue
             x, y, w, h = cv2.boundingRect(c)
-            d = self.downscale
+            if w == 0 or h == 0:
+                continue
+            if area / float(w * h) < self.min_fill_ratio:
+                continue
+            if max(w, h) / float(min(w, h)) > self.max_aspect:
+                continue
+            if self.reject_border_px:
+                edge = self.reject_border_px / d
+                if (x - sx0 < edge or y - sy0 < edge
+                        or sx1 - (x + w) < edge or sy1 - (y + h) < edge):
+                    continue
             proposals.append(Proposal(box=(x * d, y * d, (x + w) * d, (y + h) * d),
                                       area_px=area * d * d))
 
         proposals.sort(key=lambda p: p.area_px, reverse=True)
         return proposals[:self.max_proposals]
+
+    def _search_area(self, shape: tuple[int, ...]) -> Box:
+        """The region the proposer is allowed to find things in, in mask pixels."""
+        h, w = shape[:2]
+        if self.roi is None:
+            return (0, 0, w, h)
+        d = self.downscale
+        x0, y0, x1, y1 = (v // d for v in self.roi)
+        return (max(0, x0), max(0, y0), min(w, x1), min(h, y1))
 
 
 class WholeFrameProposer:

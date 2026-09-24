@@ -422,10 +422,33 @@ class ScanWorker(QObject):
 
 # ---------------------------------------------------------------- main window
 
+def _usable_threshold(stored) -> float | None:
+    """A persisted rejection threshold, or None if it cannot be trusted.
+
+    Before the Phase 6 centring fix the placeholder was 0.38; afterwards a
+    stranger scores about 0.67 and the same product about 0.92
+    (docs/research/09-architecture-review.md).  A threshold below the stranger
+    score cannot reject a stranger at all - the till would name a product for
+    anything at all, including a shadow.  0.5 sits between the two, so a value
+    under it is a pre-centring number left in a database and is ignored.
+
+    Ignoring it makes the till say "unknown" more often.  Honouring it makes the
+    till put a price on things it has never seen.  For something that takes
+    money only the first is an acceptable default.
+    """
+    if stored is None:
+        return None
+    value = float(stored)
+    return value if value >= 0.5 else None
+
+
 class MainWindow(QMainWindow):
 
-    def __init__(self, scale=None, dashboard_url="http://127.0.0.1:8000"):
+    def __init__(self, scale=None, dashboard_url="http://127.0.0.1:8000",
+                 items: str = "multi"):
         super().__init__()
+        #: "single" keeps one product per scan; see BackgroundSubtractionProposer
+        self.items = items
         theme.load_fonts()
         with open(paths.settings_path(), encoding="utf-8") as f:
             self.settings = json.load(f)
@@ -495,19 +518,27 @@ class MainWindow(QMainWindow):
                    else SkuGallery(embedder.dim))
         self._freeze_if_ready(gallery)
         cfg = FusionConfig()
-        threshold = self.db.get_settings().get("reject_below_cosine")
-        if threshold is not None:
-            cfg.reject_below_cosine = float(threshold)
+        stored = self.db.get_settings().get("reject_below_cosine")
+        usable = _usable_threshold(stored)
+        if usable is not None:
+            cfg.reject_below_cosine = usable
+        elif stored is not None:
+            logger.warning("ignoring reject_below_cosine=%s: it predates the "
+                           "centring fix, so it cannot reject a stranger", stored)
+
+        rig = self.settings.get("rig", {})
+        roi = rig.get("mat_roi")
+        proposer = BackgroundSubtractionProposer(
+            roi=tuple(roi) if roi else None)
 
         pipeline = RecognitionPipeline(
-            BackgroundSubtractionProposer(), embedder, gallery,
+            proposer, embedder, gallery,
             priors=priors_from_products(self.db.get_products()), cfg=cfg)
 
         mat_path = paths.mat_path()
         if mat_path.exists():
             background = cv2.imread(str(mat_path))
             if background is not None:
-                rig = self.settings.get("rig", {})
                 pipeline.calibrate(background, marker_mm=rig.get("marker_mm"),
                                    marker_layout_mm=rig.get("marker_positions_mm"))
         return pipeline
@@ -956,6 +987,19 @@ class MainWindow(QMainWindow):
         if error:
             self._set_status(error)
             self._set_view_state("")
+            return
+
+        # Single-item mode is a promise by the operator, so the till holds them
+        # to it rather than choosing for them.  Picking one of two would drop a
+        # real product from a till - an unscanned item leaving the shop, which
+        # is the thing verify_basket exists to catch - and picking the largest,
+        # which is the obvious implementation, hands the win to whichever junk
+        # region outlived the proposer's objectness rules.
+        if self.items == "single" and len(items) > 1:
+            self.detected = []
+            self._refresh_detected()
+            self._set_status(f"Single-item mode: {len(items)} things on the mat "
+                             "- place one product and scan again")
             return
 
         self.detected = items

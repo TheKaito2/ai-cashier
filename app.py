@@ -12,6 +12,7 @@ dashboard on the same database.
     python app.py                 till + dashboard (normal use)
     python app.py --lan           dashboard reachable from the shop wifi (needs a PIN)
     python app.py --server-only   dashboard only, no camera (spare screen, Pi headless)
+    python app.py --items single  one product per scan
     python app.py --demo          replay a still image instead of the camera
     python app.py --scale hx711   use the real load cell instead of a simulated one
     python app.py --fullscreen    kiosk: the till fills the screen
@@ -175,6 +176,8 @@ def main() -> int:
                          "something else on the machine already has that port")
     ap.add_argument("--lan", action="store_true",
                     help="serve the dashboard on every interface, PIN-protected writes")
+    ap.add_argument("--items", choices=("multi", "single"), default="multi",
+                    help="how many products one scan may return (default multi)")
     ap.add_argument("--demo", action="store_true", help="still image instead of a camera")
     ap.add_argument("--fullscreen", action="store_true", help="the till fills the screen")
     ap.add_argument("--self-test", action="store_true",
@@ -222,7 +225,8 @@ def main() -> int:
     app.setApplicationName("AI Cashier")
 
     from scanner.ui.main_window import MainWindow
-    window = MainWindow(scale=build_scale(args.scale), dashboard_url=dashboard)
+    window = MainWindow(scale=build_scale(args.scale), dashboard_url=dashboard,
+                        items=args.items)
     display = json.loads(paths.settings_path().read_text(encoding="utf-8")).get("display", {})
     if args.fullscreen or display.get("fullscreen"):
         window.showFullScreen()

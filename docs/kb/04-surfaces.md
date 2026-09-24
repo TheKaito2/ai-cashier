@@ -14,7 +14,7 @@ daemon thread and the Qt window in the same process.
 | Entry | `app.py:main` |
 | Window | `scanner/ui/main_window.py:MainWindow` |
 | Theme | `scanner/ui/theme.py:TOKENS`, QSS built by `string.Template`; `scanner/ui/theme.py:load_fonts` registers the bundled Plex faces |
-| Flags | `--server-only`, `--lan`, `--demo`, `--fullscreen`, `--self-test`, `--scale {simulated,hx711,none}` |
+| Flags | `--server-only`, `--lan`, `--port`, `--demo`, `--fullscreen`, `--self-test`, `--scale {simulated,hx711,none}`, `--items {multi,single}` |
 | Screenshots | `docs/tools/shoot_qt.py`, offscreen, into `docs/shots/v4d/` |
 
 The camera is the hero: boxes and prices are painted onto the frame itself, the

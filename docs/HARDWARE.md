@@ -54,7 +54,7 @@ The bill of materials below stays as the build order for after the defence.
 | Overhead stand | arm or frame holding the webcam and the ring light above the mat | 300–800 *(rough)* | The mat must fill the frame with ~10 % margin, and neither may move once set |
 | Pi 5 active cooler | official or equivalent | 250–400 | **Required** — see thermals |
 | PSU | 5 V / 5 A USB-C (official Pi 5 supply) | 500–800 | Under-powering a Pi 5 causes faults that look like software bugs |
-| Mat | matte, plain black or mid-grey, **no grid lines**, cut to the plate — **not A3** | 100–250 | Gloss produces specular highlights that move with the product; a cutting-mat grid is texture the proposer has to ignore |
+| Mat | matte, plain black or mid-grey, **no grid lines**, cut to the plate — **not A3** | 100–250 | Gloss produces specular highlights that move with the product; a cutting-mat grid is texture the proposer has to ignore.  A **white** table is the worst case and was tried: shadows on it are strong enough to fall below the shadow rule's intensity floor, so they are treated as objects.  Set `rig.mat_roi` so the camera's view stops at the mat, and `camera.lock_exposure` so auto-exposure cannot move every pixel between calibration and the scan |
 | Markers | four printed ArUco, laminated | ~20 | `python tools/make_marker.py` - one per mat corner |
 
 **Not yet — the software cannot use them.**

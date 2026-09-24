@@ -158,3 +158,26 @@ rather than a false verdict, and abstention exists so the till does not guess.
 travels with the repository.  `graphify-out/` is regenerable from a single command
 and is gitignored.  A checker in the test suite keeps the references in these pages
 resolving, so the knowledge base fails loudly instead of rotting quietly.
+
+## The mat rectangle is typed, not derived from the markers
+
+*24 September 2026.*  `rig.mat_roi` is four numbers in `config/settings.json`.
+Deriving it from the ArUco markers was the obvious alternative and is worse in
+three ways: `recognition/metrology.py:from_frame` returns `None`
+when no marker is visible, so the region would vanish exactly when a rig has not
+been finished; a marker can be covered by the product being scanned, so it would
+flicker frame to frame; and markers mark their own corners, not the mat's extent,
+so a hand-typed margin would still be needed.  Four numbers, typed once, after
+the camera is aimed.
+
+## Single-item mode refuses rather than chooses
+
+*24 September 2026.*  `--items single` is a promise by the operator that one
+product is on the mat.  When the till sees more it shows nothing and says how
+many it saw.  Choosing for the operator was rejected: picking the largest hands
+the win to whichever junk region outlived the objectness rules — and it is what
+`recognition/pipeline.py:enrol` does, which is how a bad enrolment happens —
+while picking the most confident silently drops a real product from a till, which
+is an unscanned item leaving the shop and the thing
+`recognition/fusion.py:verify_basket` exists to catch.  Refusal is the only
+option where the operator learns what the machine saw.

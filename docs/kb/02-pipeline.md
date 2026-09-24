@@ -16,7 +16,7 @@ Nothing is retrained to add a product.  That is the whole claim.
 | 2 | The cashier presses Scan; a `ScanWorker` moves onto a QThread so the window never freezes | `scanner/ui/main_window.py:ScanWorker` |
 | 3 | The scale is read.  `read_stable_grams` returns `None` rather than a misleading zero if the reading has not settled | `recognition/scale.py:read_stable_grams` |
 | 4 | The new item's mass is the change since the last item went down, not the whole pan | `recognition/fusion.py:item_weight_for_scan` |
-| 5 | The empty mat is subtracted; shadow pixels are dropped by chromaticity, not brightness | `recognition/proposer.py:propose` |
+| 5 | The empty mat is subtracted; shadow pixels are dropped by chromaticity, not brightness; then anything that is not object-shaped, or not on the mat, is dropped | `recognition/proposer.py:propose` |
 | 6 | Boxes are matched to existing tracks; a settled track is not re-embedded | `recognition/tracker.py:update` |
 | 7 | Every unsettled crop is embedded in one batch | `recognition/embedder.py:OnnxEmbedder` |
 | 8 | The query is L2-normalised, the gallery centre subtracted, normalised again, then scored against every enrolled view | `recognition/gallery.py:project` and `recognition/gallery.py:match` |
@@ -30,6 +30,18 @@ Teaching a product is the same machinery run backwards — `recognition/pipeline
 crops k views, embeds them and hands the vectors to `recognition/gallery.py:enrol`.
 
 ## Three things that are easy to get wrong
+
+**Differing from the mat is not the same as being an object.**  Until the first
+real rig was switched on, `recognition/proposer.py:propose` had exactly two
+tests — a per-pixel difference, and a minimum contour area — and that was the
+whole definition of a product.  On a white table the table's own edges, a cable,
+the floor and a moving shadow all passed, and the till listed products that were
+not there.  Four objectness rules now follow the area gate: an upper area bound,
+a fill ratio (the gate measures the contour, but the *bounding box* is what gets
+emitted and embedded), an aspect limit, and rejection of anything reaching the
+boundary.  `rig.mat_roi` narrows the search to the mat itself; the mask outside
+it is zeroed rather than the frame cropped, so every box stays in full-frame
+coordinates.
 
 **The centre must be subtracted from a normalised query.** `project` normalises,
 subtracts the frozen centre, then normalises again.  Subtracting a unit-length

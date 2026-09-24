@@ -69,8 +69,23 @@ webcam at `/dev/video0` doing MJPG 1280×720 at 30 FPS — exactly what
 `config/settings.json` already asked for.  Scan latency is measured there and
 written up in `docs/kb/05-research.md`.
 
-Four things had to be fixed to get there, all of them in the deployment rather
-than the software: a systemd user unit that hung off `graphical-session.target`,
+The first real scan then found something the software had never been asked about.
+`recognition/proposer.py:propose` had two filters — a per-pixel difference and a
+minimum contour area — and that was the complete definition of a product.  No
+upper bound, no aspect or fill check, no rejection of regions touching the frame
+edge.  On a white table whose edges, cable and floor are all in shot, the till
+listed products that were not there.  Four objectness rules and an optional
+`rig.mat_roi` now follow the area gate.
+
+A related landmine was found while reading, and is *not* on the rig but is one
+setting away: a `reject_below_cosine` of 0.38 left in a shop database predates
+the centring fix and sits below a stranger's score, so it rejects nothing.
+`scanner/ui/main_window.py:_usable_threshold` now ignores anything under 0.5 and
+says so, because a till that abstains too often is recoverable and one that
+prices a shadow is not.
+
+Four things had to be fixed to get the till running at all, all of them in the
+deployment rather than the software: a systemd user unit that hung off `graphical-session.target`,
 which labwc never activates, so it stayed `enabled` and `inactive (dead)` with no
 log at all; `pip --quiet` hiding a half-hour install; a Qt platform plugin chosen
 from `WAYLAND_DISPLAY` at install time, which is never set over SSH; and a

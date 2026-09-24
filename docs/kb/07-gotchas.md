@@ -11,6 +11,29 @@ subtracts the mat it was shown; give it a different scene and the whole frame is
 foreground.  Calibrate on the mat you are actually going to use — the screenshot
 harness calibrates on `docs/assets/demo_mat.png` for exactly this reason.
 
+The way this happens in practice is `--demo`: the till replays
+`docs/assets/demo_frame.jpg`, someone presses **Calibrate mat**, and that picture
+is written to the real data directory.  Seen on the rig on 24 September 2026, and
+it presents as something far more alarming than a stale photograph — a *single*
+item still matches, because a whole-frame crop is mostly that item, while two
+items never do.  It reads as "the recogniser only handles one product at a time".
+`scanner/ui/main_window.py:on_calibrate_mat` now refuses while the demo camera is
+installed.
+
+**The till lists Unknown items that are not on the mat.**
+The camera can see past the mat.  Table edges, a cable, the floor and hard-edged
+shadows all differ from the calibration photograph, and until the objectness
+rules were added, differing was the whole test.  Set `rig.mat_roi` in
+`config/settings.json` to the mat's rectangle in full-frame pixels, set
+`camera.lock_exposure` to true so auto-exposure cannot shift every pixel between
+the calibration frame and the scan, and prefer the matte dark mat
+`docs/HARDWARE.md` prescribes over a white table, where shadows are strong enough
+to fall below the shadow rule's 0.55 floor and be treated as objects.
+
+Note the area floor was never an objectness test: `min_area_px` is measured at
+`downscale`, so its 4000 is about 63×63 full-res pixels — 0.43 % of a 720p frame
+— and it is applied *after* a morphological close that agglomerates speckle.
+
 **Scores collapse after a change to the gallery.**
 Check that `recognition/gallery.py:project` still normalises the query *before*
 subtracting the centre.  See fault F5 in `docs/research/09-architecture-review.md`.

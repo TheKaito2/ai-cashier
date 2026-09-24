@@ -15,12 +15,13 @@
       "height": 720
     },
     "fourcc": "MJPG",
-    "lock_exposure": false
+    "lock_exposure": true
   },
   "rig": {
     "marker_mm": 60.0,
     "marker_dict": "DICT_4X4_50",
-    "marker_positions_mm": null
+    "marker_positions_mm": null,
+    "mat_roi": null
   },
   "scale": {
     "dout_pin": 5,
