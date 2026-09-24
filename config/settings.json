@@ -15,7 +15,8 @@
       "height": 720
     },
     "fourcc": "MJPG",
-    "lock_exposure": true
+    "lock_exposure": true,
+    "exposure": null
   },
   "rig": {
     "marker_mm": 60.0,

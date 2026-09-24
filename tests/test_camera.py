@@ -1,72 +1,93 @@
-"""The camera settings in config actually reach the driver (docs/research/09, D9)."""
+"""The camera settings in config actually reach the driver (docs/research/09, D9).
+
+The exposure lock has its own section: it stranded the rig's webcam in a nearly
+black picture, and `lock_exposure: false` did not undo it, because V4L2 keeps
+these controls on the device rather than in the process.
+"""
 import cv2
 import numpy as np
 
 from scanner.detection.camera import (V4L2_EXPOSURE_AUTO, V4L2_EXPOSURE_MANUAL,
                                       VideoStream)
 
-#: what the driver reports while auto-exposure is running
-SETTLED_EXPOSURE, SETTLED_WB = 156.0, 4600.0
-
 
 class FakeCapture:
-    #: 0 is what a camera that will not report its exposure returns
-    reports = {cv2.CAP_PROP_EXPOSURE: SETTLED_EXPOSURE,
-               cv2.CAP_PROP_WB_TEMPERATURE: SETTLED_WB}
+    """A camera whose picture goes dark the moment exposure is set to manual -
+    which is exactly what the rig's Sunplus webcam does."""
+
+    goes_dark_when_locked = True
 
     def __init__(self, src):
         self.src, self.props, self.released = src, {}, False
+        self.manual = False
 
     def set(self, prop, value):
         self.props[prop] = value
+        if prop == cv2.CAP_PROP_AUTO_EXPOSURE:
+            self.manual = value == V4L2_EXPOSURE_MANUAL
         return True
 
     def get(self, prop):
-        return self.reports.get(prop, 0.0)
+        return 0.0
 
     def read(self):
-        return True, np.zeros((4, 4, 3), np.uint8)
+        dark = self.manual and self.goes_dark_when_locked
+        level = 12 if dark else 150
+        return True, np.full((4, 4, 3), level, np.uint8)
 
     def release(self):
         self.released = True
 
 
-def test_fourcc_size_and_exposure_lock_are_applied(monkeypatch):
-    monkeypatch.setattr(cv2, "VideoCapture", FakeCapture)
-    v = VideoStream(0, fourcc="MJPG", size=(1280, 720), lock_exposure=True)
+class WellBehaved(FakeCapture):
+    """A camera that honours a manual exposure without going dark."""
+    goes_dark_when_locked = False
+
+
+def test_fourcc_and_size_are_applied(monkeypatch):
+    monkeypatch.setattr(cv2, "VideoCapture", WellBehaved)
+    v = VideoStream(0, fourcc="MJPG", size=(1280, 720))
     v.stop()
     p = v.cap.props
     assert p[cv2.CAP_PROP_FOURCC] == cv2.VideoWriter_fourcc(*"MJPG")
     assert p[cv2.CAP_PROP_FRAME_WIDTH] == 1280 and p[cv2.CAP_PROP_FRAME_HEIGHT] == 720
-    assert p[cv2.CAP_PROP_AUTO_EXPOSURE] == V4L2_EXPOSURE_MANUAL and p[cv2.CAP_PROP_AUTO_WB] == 0
     assert v.cap.released
 
 
-def test_locking_the_exposure_keeps_the_value_auto_mode_had_settled_on(monkeypatch):
-    """Switching V4L2 to manual does not carry the automatic value over - the
-    driver falls back to its own default, and on the rig's webcam that is a
-    nearly black picture.  Locking must mean "freeze it here"."""
-    monkeypatch.setattr(cv2, "VideoCapture", FakeCapture)
-    v = VideoStream(0, lock_exposure=True)
+def test_a_lock_that_honours_the_exposure_is_kept(monkeypatch):
+    monkeypatch.setattr(cv2, "VideoCapture", WellBehaved)
+    v = VideoStream(0, lock_exposure=True, exposure=156)
     v.stop()
-    assert v.cap.props[cv2.CAP_PROP_EXPOSURE] == SETTLED_EXPOSURE
-    assert v.cap.props[cv2.CAP_PROP_WB_TEMPERATURE] == SETTLED_WB
+    assert v.cap.props[cv2.CAP_PROP_AUTO_EXPOSURE] == V4L2_EXPOSURE_MANUAL
+    assert v.cap.props[cv2.CAP_PROP_AUTO_WB] == 0
+    assert v.cap.props[cv2.CAP_PROP_EXPOSURE] == 156
 
 
-def test_a_camera_that_will_not_report_its_exposure_is_left_on_auto(monkeypatch):
-    """Better a picture that drifts than a picture that is black."""
-    class Silent(FakeCapture):
-        reports = {}
-
-    monkeypatch.setattr(cv2, "VideoCapture", Silent)
+def test_a_lock_that_blinds_the_camera_is_undone(monkeypatch):
+    """The rig's camera reports an exposure it will not reproduce in manual, so
+    locking it produced a nearly black frame and every scan saw nothing.  A till
+    that drifts is a measurement problem; a till that cannot see is not a till."""
+    monkeypatch.setattr(cv2, "VideoCapture", FakeCapture)
     v = VideoStream(0, lock_exposure=True)
     v.stop()
     assert v.cap.props[cv2.CAP_PROP_AUTO_EXPOSURE] == V4L2_EXPOSURE_AUTO
-    assert cv2.CAP_PROP_EXPOSURE not in v.cap.props
+    assert v.cap.props[cv2.CAP_PROP_AUTO_WB] == 1
 
 
-def test_nothing_is_set_when_nothing_is_asked(monkeypatch):
+def test_not_locking_actively_restores_auto(monkeypatch):
+    """V4L2 keeps these on the device.  A previous run with the lock on would
+    otherwise leave every later run dark, including one configured not to lock."""
     monkeypatch.setattr(cv2, "VideoCapture", FakeCapture)
+    v = VideoStream(0, lock_exposure=False)
+    v.stop()
+    assert v.cap.props[cv2.CAP_PROP_AUTO_EXPOSURE] == V4L2_EXPOSURE_AUTO
+    assert v.cap.props[cv2.CAP_PROP_AUTO_WB] == 1
+
+
+def test_nothing_else_is_set_when_nothing_is_asked(monkeypatch):
+    monkeypatch.setattr(cv2, "VideoCapture", WellBehaved)
     v = VideoStream(1)
     v.stop()
-    assert v.cap.props == {} and v.cap.src == 1
+    assert v.cap.src == 1
+    assert cv2.CAP_PROP_FOURCC not in v.cap.props
+    assert cv2.CAP_PROP_EXPOSURE not in v.cap.props

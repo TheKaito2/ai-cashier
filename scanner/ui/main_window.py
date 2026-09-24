@@ -478,7 +478,8 @@ class MainWindow(QMainWindow):
             cam["ip_camera_url"] if cam["use_ip_camera"] else cam["default_source"],
             fourcc=cam.get("fourcc"),
             size=(res.get("width"), res.get("height")) if res else None,
-            lock_exposure=bool(cam.get("lock_exposure")))
+            lock_exposure=bool(cam.get("lock_exposure")),
+            exposure=cam.get("exposure"))
 
         self._build()
         self.setStyleSheet(theme.QSS)
