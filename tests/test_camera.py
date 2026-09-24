@@ -63,6 +63,20 @@ def test_a_lock_that_honours_the_exposure_is_kept(monkeypatch):
     assert v.cap.props[cv2.CAP_PROP_EXPOSURE] == 156
 
 
+def test_the_lock_measures_against_auto_even_if_the_device_was_left_in_manual(monkeypatch):
+    """V4L2 keeps the control on the device.  A camera left dark by a previous
+    run reads dark before the lock too, so a naive before/after comparison sees
+    no collapse and preserves the blindness."""
+    monkeypatch.setattr(cv2, "VideoCapture", FakeCapture)
+    stranded = FakeCapture(0)
+    stranded.manual = True                       # as a previous process left it
+    monkeypatch.setattr(cv2, "VideoCapture", lambda src: stranded)
+
+    v = VideoStream(0, lock_exposure=True)
+    v.stop()
+    assert stranded.props[cv2.CAP_PROP_AUTO_EXPOSURE] == V4L2_EXPOSURE_AUTO
+
+
 def test_a_lock_that_blinds_the_camera_is_undone(monkeypatch):
     """The rig's camera reports an exposure it will not reproduce in manual, so
     locking it produced a nearly black frame and every scan saw nothing.  A till

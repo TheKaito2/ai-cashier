@@ -95,6 +95,13 @@ class VideoStream:
         `camera.exposure` in the settings pins a value measured on the rig once,
         which is the only way to get a lock this camera will honour.
         """
+        # Start from auto, always.  V4L2 keeps the control on the device, so a
+        # previous run may have left it in manual and dark - and then the
+        # "before" reading is dark too, the ratio below looks fine, and the lock
+        # cheerfully preserves a blind camera.  The baseline has to be what auto
+        # mode actually produces here and now.
+        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, V4L2_EXPOSURE_AUTO)
+        self.cap.set(cv2.CAP_PROP_AUTO_WB, 1)
         before = self._brightness()
 
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, V4L2_EXPOSURE_MANUAL)
