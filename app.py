@@ -38,7 +38,8 @@ sys.path.insert(0, str(ROOT))
 
 import paths  # noqa: E402
 
-PORT = 8000
+#: the dashboard's port.  --port moves it; a Pi often has something else on 8000
+DEFAULT_PORT = 8000
 
 
 def _redirect_output_when_windowed() -> None:
@@ -55,17 +56,17 @@ def _redirect_output_when_windowed() -> None:
         sys.stderr = log
 
 
-def start_server(host: str, lan: bool) -> str:
+def start_server(host: str, lan: bool, port: int = DEFAULT_PORT) -> str:
     """Run uvicorn on a daemon thread and return the dashboard URL once it answers."""
     import uvicorn
     import server.main as main
 
     main.app.state.lan = lan
-    config = uvicorn.Config(main.app, host=host, port=PORT, log_level="warning")
+    config = uvicorn.Config(main.app, host=host, port=port, log_level="warning")
     server = uvicorn.Server(config)
     threading.Thread(target=server.run, name="uvicorn", daemon=True).start()
 
-    local = f"http://127.0.0.1:{PORT}"
+    local = f"http://127.0.0.1:{port}"
     deadline = time.time() + 30
     while time.time() < deadline:
         try:
@@ -75,14 +76,17 @@ def start_server(host: str, lan: bool) -> str:
         except Exception:
             time.sleep(0.25)
     else:
-        raise RuntimeError(f"server did not come up on {local} within 30s")
+        raise RuntimeError(
+            f"server did not come up on {local} within 30s - if the line above "
+            f"says 'address already in use', something else holds port {port}; "
+            f"run with --port to move the dashboard")
 
     if not lan:
         return local
     if not main.db.get_settings().get("dashboard_pin"):
         print("  WARNING: --lan with no dashboard_pin in the shop settings - "
               "every write from the network will be refused until one is set")
-    return f"http://{_lan_ip()}:{PORT}"
+    return f"http://{_lan_ip()}:{port}"
 
 
 def _lan_ip() -> str:
@@ -164,6 +168,9 @@ def main() -> int:
     _redirect_output_when_windowed()
     ap = argparse.ArgumentParser(description="AI Cashier System")
     ap.add_argument("--server-only", action="store_true", help="dashboard only, no scanner window")
+    ap.add_argument("--port", type=int, default=DEFAULT_PORT,
+                    help=f"dashboard port (default {DEFAULT_PORT}); move it when "
+                         "something else on the machine already has that port")
     ap.add_argument("--lan", action="store_true",
                     help="serve the dashboard on every interface, PIN-protected writes")
     ap.add_argument("--demo", action="store_true", help="still image instead of a camera")
@@ -191,7 +198,7 @@ def main() -> int:
     print(f"  data      {paths.data_dir()}")
     print(f"  gallery   {taught}")
     print(f"  embedder  {paths.EMBEDDER}")
-    dashboard = start_server("0.0.0.0" if args.lan else "127.0.0.1", args.lan)
+    dashboard = start_server("0.0.0.0" if args.lan else "127.0.0.1", args.lan, args.port)
     print(f"  dashboard {dashboard}/   inventory {dashboard}/inventory   analytics {dashboard}/admin")
 
     if args.server_only:
