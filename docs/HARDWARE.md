@@ -282,15 +282,24 @@ cd AI-Cashier-v4
 
 It defaults to `--scale none --fullscreen`, which is the defence build.  Any
 flags you pass replace that set entirely: `./deploy/install.sh --scale hx711
---fullscreen --lan`.  It writes a user unit and a menu entry, enables lingering
-so the till comes up without anyone logging in, and fails loudly with the
-journal if the service does not start.
+--fullscreen --lan`.  It writes an autostart entry and a menu entry, and when it
+is run from the Pi's own desktop it starts the till and waits to see that it
+stays up.  Run over SSH there is no display, so it says so rather than running a
+check that could not mean anything.
 
-Afterwards the till is a service, not a command:
+**Start at boot is XDG autostart, not a systemd user unit.**  A user unit is the
+obvious choice and it does not work here: it wants `graphical-session.target`,
+which GNOME and KDE activate and **labwc — what Pi OS Trixie actually runs — does
+not**.  The unit sits `enabled` and `inactive (dead)` forever with no log entry
+to say why, which is a genuinely hard failure to read.  Autostart also runs
+inside the real session, so Qt chooses its own platform plugin instead of the
+installer guessing from an SSH shell where `WAYLAND_DISPLAY` is never set.
+
+Afterwards the till starts with the desktop.  To see an error, run it in the
+foreground on the Pi:
 
 ```bash
-systemctl --user restart ai-cashier
-journalctl --user -u ai-cashier -f
+.venv/bin/python app.py --scale none --fullscreen
 ```
 
 Two things the installer cannot do, because they need your hands:
