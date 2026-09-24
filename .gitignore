@@ -8,7 +8,12 @@ logs/
 data/checkout.sqlite3*
 data/gallery.npz
 data/mat_background.png
-research/results/
+# Results are regenerable, except the hardware benchmarks: those are a few
+# kilobytes each and cannot be reproduced without the machine that made them.
+# The contents are excluded rather than the directory, because git cannot
+# re-include a file whose parent directory is itself excluded.
+research/results/*
+!research/results/bench-*.json
 paper/tables/
 paper/figures/
 paper/main.pdf

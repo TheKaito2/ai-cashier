@@ -31,7 +31,7 @@ Not blocked by it, and already done instead: E9 on a public dataset, which is wh
 
 | | What | Where it is written down |
 |---|---|---|
-| 40 | **The best encoder is not the shipped one, and now the price is known.**  Under ONNX on an M1: 7.9 ms for the shipped MobileNetV3 at 45.8 %, 203 ms for MobileCLIP2-S0 at 79.9 %, 584 ms for MobileCLIP-B at 89.6 %.  Twenty-six to seventy-four times the cost for the accuracy.  A Pi 5 is several times slower again, so what is affordable there is still unmeasured — and it needs only the hardware, no products.  **Quantisation is not the escape route**: MobileCLIP-S1 fails both INT8 paths, so its float cost is its only cost | `docs/kb/05-research.md` |
+| 40 | **The best encoder is not the shipped one, and now the price is known.**  Under ONNX on an M1: 7.9 ms for the shipped MobileNetV3 at 45.8 %, 203 ms for MobileCLIP2-S0 at 79.9 %, 584 ms for MobileCLIP-B at 89.6 %.  Twenty-six to seventy-four times the cost for the accuracy.  **Half closed on 24 September 2026**: the shipped encoder is 8.2 ms on a real Pi 5 against 7.9 ms on the M1, so the Pi is not "several times slower" as this page assumed.  What the CLIP encoders cost on the Pi is still unmeasured, and now costs nothing but an afternoon.  **Quantisation is not the escape route**: MobileCLIP-S1 fails both INT8 paths, so its float cost is its only cost | `docs/kb/05-research.md` |
 | 41 | **Zero-capture enrolment** reaches 82.9 % top-1 on public photographs with MobileCLIP-B — enrolling from the manufacturer's image with no capture at all.  Whether that survives the rig's own lighting and mat is unmeasured, and it would remove the capture step from enrolment entirely | `docs/kb/05-research.md` |
 | 37 | **E1 has never run on a photograph.**  `research/experiments.py:e1_closed_set_baseline` exists and is tested, but it needs the twelve legacy products photographed with `capture.py --in-legacy-model`, ultralytics installed, and the gitignored AGPL `models/*.pt` present.  Until then it returns `insufficient_data` and `paper/tables/e1_closed_set.tex` is a "NOT RUN" stub | `docs/kb/05-research.md` |
 | — | **The escalation threshold has a curve but not a real one.**  `research/experiments.py:_escalation_sweep` now measures what each baht line buys, and `paper/tables/e6_escalation.tex` prints it — but on synthetic products with three unseen SKUs.  The shape is right; the numbers need the capture session | `docs/kb/06-decisions.md` |
@@ -61,13 +61,27 @@ reads one camera source and nothing combines two.  Corrected on 19 September 202
 and the second webcam and powered hub moved to a "not yet" list so nobody buys
 hardware the software cannot use.
 
+## Reached the Pi on 24 September 2026
+
+The rig is no longer hypothetical.  A Raspberry Pi 5 8 GB on Bookworm runs the
+till from `deploy/install.sh`, autostarted with the desktop, with a Sunplus USB
+webcam at `/dev/video0` doing MJPG 1280×720 at 30 FPS — exactly what
+`config/settings.json` already asked for.  Scan latency is measured there and
+written up in `docs/kb/05-research.md`.
+
+Four things had to be fixed to get there, all of them in the deployment rather
+than the software: a systemd user unit that hung off `graphical-session.target`,
+which labwc never activates, so it stayed `enabled` and `inactive (dead)` with no
+log at all; `pip --quiet` hiding a half-hour install; a Qt platform plugin chosen
+from `WAYLAND_DISPLAY` at install time, which is never set over SSH; and a
+hardcoded port 8000 already held by an unrelated project on the same Pi.
+
 ## What this laptop cannot verify
 
 Stated here so no future session claims otherwise.
 
-- The lgpio HX711 reader on a real Raspberry Pi 5, and scan latency on it.  Every
-  latency figure on record is from an M1 and is labelled as such.
-- A USB webcam on the Pi, and shadow behaviour under real shop lighting.
+- The lgpio HX711 reader on a real Raspberry Pi 5.  No load cell is wired.
+- Shadow behaviour under real shop lighting.
 - The Windows installer against a real webcam — CI proves it starts, serves and
   completes a checkout, not that it sees anything.
 - The iPhone app on a physical phone.  A free Apple ID gives seven-day sideloading

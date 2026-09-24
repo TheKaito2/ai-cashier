@@ -1,0 +1,69 @@
+{
+  "backbone": "mobilenet_v3_small",
+  "items_on_mat": 3,
+  "runtime": "onnx",
+  "input_px": 224,
+  "frame_size": [
+    720,
+    1280
+  ],
+  "machine": {
+    "platform": "Linux-6.12.62+rpt-rpi-2712-aarch64-with-glibc2.36",
+    "machine": "aarch64",
+    "processor": "",
+    "python": "3.11.2"
+  },
+  "cpu_temperature_c_start": 52.35,
+  "stages": {
+    "propose": {
+      "mean_ms": 23.511094720033725,
+      "median_ms": 23.50350849997085,
+      "p95_ms": 23.561628000152268,
+      "n": 50
+    },
+    "embed_one_crop": {
+      "mean_ms": 8.16337115999886,
+      "median_ms": 8.1523430001198,
+      "p95_ms": 8.247535999998945,
+      "n": 50
+    },
+    "embed_3_crops": {
+      "mean_ms": 24.189288220004528,
+      "median_ms": 24.155443999916315,
+      "p95_ms": 24.343134999980975,
+      "n": 50
+    },
+    "gallery_match": {
+      "mean_ms": 0.05261102497797765,
+      "median_ms": 0.051619999794638716,
+      "p95_ms": 0.05670300015481189,
+      "n": 200
+    },
+    "metrology": {
+      "mean_ms": 7.67834700000094,
+      "median_ms": 7.656112499944356,
+      "p95_ms": 7.785711999986233,
+      "n": 20
+    },
+    "full_frame_cold": {
+      "mean_ms": 48.43444519992772,
+      "median_ms": 48.26240899978984,
+      "p95_ms": 48.360629999933735,
+      "n": 10
+    },
+    "scan_5_frames": {
+      "mean_ms": 218.2626459000403,
+      "median_ms": 217.29052599994247,
+      "p95_ms": 219.79973199995584,
+      "n": 10
+    },
+    "full_frame_settled": {
+      "mean_ms": 23.664387199987686,
+      "median_ms": 23.652225500200075,
+      "p95_ms": 23.726001999875734,
+      "n": 50
+    }
+  },
+  "sustained_fps_settled": 42.25759118750898,
+  "cpu_temperature_c_end": 52.35
+}

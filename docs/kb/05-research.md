@@ -196,9 +196,44 @@ Measured on an M1 laptop, on the public cartons.
 Three things follow.
 
 **The accuracy is not free: it is 26 to 74 times the cost.**  The cheapest CLIP
-encoder is 203 ms against 7.9 ms.  On an M1.  A Pi 5 is several times slower
-again, so whether any of this is affordable at the till is a measurement nobody
-has made — ledger item 40, and it needs the hardware rather than more thinking.
+encoder is 203 ms against 7.9 ms, on an M1.  Whether that is affordable at the
+till was ledger item 40, and it is now half answered — see below.
+
+## Measured on the Raspberry Pi 5, 24 September 2026
+
+`research/results/bench-pi5.json`.  Raspberry Pi 5 8 GB, Bookworm, aarch64,
+Python 3.11, ONNX Runtime, the shipped `mobilenet_v3_small` at 224 px on a
+1280×720 frame with three products on the mat.  CPU 52.35 °C at the start and
+52.35 °C at the end, so nothing here is a burst before throttling.
+
+| stage | mean | p95 |
+|---|---|---|
+| propose | 23.5 ms | 23.6 ms |
+| embed one crop | 8.2 ms | 8.2 ms |
+| embed three crops | 24.2 ms | 24.3 ms |
+| gallery match | 0.1 ms | 0.1 ms |
+| metrology | 7.7 ms | 7.8 ms |
+| full frame, cold | 48.4 ms | 48.4 ms |
+| full frame, settled | 23.7 ms | 23.7 ms |
+| the Scan button, five frames | 218.3 ms | 219.8 ms |
+
+Sustained **42.3 FPS** once tracks have settled.
+
+**The assumption this page carried was wrong.**  It said a Pi 5 is "several times
+slower again" than the M1.  Embedding one crop is **8.2 ms on the Pi against 7.9 ms
+on the M1** — both ONNX, both 224 px.  A factor of 1.04, not several.
+
+Do not extrapolate that to the CLIP encoders.  MobileNetV3-Small is a tiny
+depthwise network and is plausibly memory-bound rather than compute-bound; a
+ViT-B is not, and it may scale quite differently.  What this result does say is
+that the question is now cheap to settle — the rig exists, and the same script
+answers it for any backbone that will export.
+
+**The Scan button crosses its own line.**  `research/bench.py` says that above
+about 200 ms on the Pi the scan must leave the UI thread (`docs/research/09`, D4).
+It measures 218.3 ms.  D4 was already implemented — `scanner/ui/main_window.py:ScanWorker`
+runs the scan on a QThread — so the window does not freeze.  The measurement
+confirms the decision rather than opening a fault.
 
 **S1 dominates S2.**  More accurate and slightly cheaper, so S2 is off the table
 whatever the budget.  Worth stating because the naming implies otherwise.

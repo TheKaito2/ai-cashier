@@ -1,0 +1,61 @@
+{
+  "backbone": "mobilenet_v3_small",
+  "items_on_mat": 3,
+  "frame_size": [
+    720,
+    1280
+  ],
+  "machine": {
+    "platform": "macOS-26.3-arm64-arm-64bit",
+    "machine": "arm64",
+    "processor": "arm",
+    "python": "3.12.13"
+  },
+  "cpu_temperature_c_start": null,
+  "stages": {
+    "propose": {
+      "mean_ms": 20.35515416879207,
+      "median_ms": 20.32652054913342,
+      "p95_ms": 20.685333060100675,
+      "n": 50
+    },
+    "embed_one_crop": {
+      "mean_ms": 10.730698318220675,
+      "median_ms": 10.794457979500294,
+      "p95_ms": 14.557083137333393,
+      "n": 50
+    },
+    "embed_3_crops": {
+      "mean_ms": 30.229410780593753,
+      "median_ms": 29.93766637519002,
+      "p95_ms": 31.937082996591926,
+      "n": 50
+    },
+    "gallery_match": {
+      "mean_ms": 0.0368752283975482,
+      "median_ms": 0.03531249240040779,
+      "p95_ms": 0.04233303479850292,
+      "n": 200
+    },
+    "metrology": {
+      "mean_ms": 5.152310431003571,
+      "median_ms": 4.895374993793666,
+      "p95_ms": 6.05762517079711,
+      "n": 20
+    },
+    "full_frame_cold": {
+      "mean_ms": 51.46112514194101,
+      "median_ms": 52.50593752134591,
+      "p95_ms": 54.789209039881825,
+      "n": 10
+    },
+    "full_frame_settled": {
+      "mean_ms": 20.542992581613362,
+      "median_ms": 20.387541502714157,
+      "p95_ms": 20.75395919382572,
+      "n": 50
+    }
+  },
+  "sustained_fps_settled": 48.67839950908769,
+  "cpu_temperature_c_end": null
+}
