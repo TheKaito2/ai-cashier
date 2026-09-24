@@ -195,6 +195,58 @@ def test_a_measured_threshold_is_used(till):
     assert rebuilt.cfg.reject_below_cosine == 0.8123
 
 
+# ------------------------------------------------------- switching recogniser
+
+def test_the_selector_offers_the_three_modes(till):
+    window = till()
+    assert [window.mode_box.itemData(i) for i in range(window.mode_box.count())] \
+        == ["multi", "single", "yolo"]
+
+
+def test_a_mode_that_cannot_be_built_reverts_instead_of_leaving_no_recogniser(
+        till, operator, monkeypatch):
+    """The weights are gitignored and ultralytics is not a till dependency, so
+    on most machines closed-set mode simply is not available.  It must say so
+    and put the working mode back, not leave the till holding nothing."""
+    window = till()
+    before = window.pipeline
+
+    def unavailable(self):
+        raise FileNotFoundError("models/chips_model.pt - gitignored")
+    monkeypatch.setattr(mw.MainWindow, "_build_closed_set", unavailable)
+
+    window.mode_box.setCurrentIndex(2)             # closed-set
+
+    assert window.items == "multi"
+    assert window.mode_box.currentData() == "multi"
+    assert window.pipeline is not before, "a working recogniser was rebuilt"
+    assert operator.told("not available")
+
+
+def test_closed_set_mode_turns_enrolment_off(till, monkeypatch):
+    """A trained detector proposes nothing for a product it has never seen, so
+    offering Add product here would be a lie."""
+    class Fake:
+        gallery = metrology = None
+        priors: dict = {}
+        classes = ["Pepsi"]
+        proposer = type("P", (), {"calibrated": True,
+                                  "propose": lambda self, f: []})()
+        def reset(self): pass
+        def calibrate(self, *a, **k): pass
+        def process(self, frame, weight_delta_g=None): return []
+
+    window = till()
+    monkeypatch.setattr(mw.MainWindow, "_build_closed_set", lambda self: Fake())
+
+    window.mode_box.setCurrentIndex(2)
+
+    assert window.items == "yolo"
+    assert not window.enrol_btn.isEnabled()
+    assert not window.calibrate_btn.isEnabled()
+    assert "1 trained products" in window.status.text()
+
+
 # ------------------------------------------------------- one item at a time
 
 def test_single_item_mode_refuses_two_things_rather_than_choosing_one(till):

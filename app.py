@@ -13,6 +13,7 @@ dashboard on the same database.
     python app.py --lan           dashboard reachable from the shop wifi (needs a PIN)
     python app.py --server-only   dashboard only, no camera (spare screen, Pi headless)
     python app.py --items single  one product per scan
+    python app.py --items yolo    version 1's closed-set detector (AGPL, see NOTICE)
     python app.py --demo          replay a still image instead of the camera
     python app.py --scale hx711   use the real load cell instead of a simulated one
     python app.py --fullscreen    kiosk: the till fills the screen
@@ -176,8 +177,9 @@ def main() -> int:
                          "something else on the machine already has that port")
     ap.add_argument("--lan", action="store_true",
                     help="serve the dashboard on every interface, PIN-protected writes")
-    ap.add_argument("--items", choices=("multi", "single"), default="multi",
-                    help="how many products one scan may return (default multi)")
+    ap.add_argument("--items", choices=("multi", "single", "yolo"), default="multi",
+                    help="which recogniser to start in; the till can switch at "
+                         "runtime (default multi)")
     ap.add_argument("--demo", action="store_true", help="still image instead of a camera")
     ap.add_argument("--fullscreen", action="store_true", help="the till fills the screen")
     ap.add_argument("--self-test", action="store_true",

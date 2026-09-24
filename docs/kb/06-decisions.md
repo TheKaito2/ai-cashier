@@ -181,3 +181,23 @@ while picking the most confident silently drops a real product from a till, whic
 is an unscanned item leaving the shop and the thing
 `recognition/fusion.py:verify_basket` exists to catch.  Refusal is the only
 option where the operator learns what the machine saw.
+
+## The old detector is a mode, not a deletion
+
+*24 September 2026.*  The till can be switched into **Closed-set (v1)**, which
+runs `models/chips_model.pt` and `models/drinks_model.pt` through
+`recognition/closed_set.py:ClosedSetRecogniser`.  This is the approach the
+project exists to replace, and having it one button away is the most direct
+demonstration of the difference: the same camera, the same mat, and a recogniser
+that knows twelve products and cannot be taught a thirteenth.
+
+It is not free, and the costs are recorded rather than hidden.  Selecting the
+mode loads ultralytics, which is AGPL-3.0, so the running program is not
+Apache-2.0 while it is selected — `NOTICE` now says exactly that.  Enrolment and
+mat calibration are disabled in the mode because neither means anything to a
+classifier.  And the mode cannot say "I do not know": below its confidence
+threshold it produces no box at all, so an unknown product is invisible rather
+than flagged, which is the failure the retrieval path was built to avoid.
+
+Nothing imports ultralytics at module scope, so a till that never selects the
+mode never loads it; `tests/test_no_ultralytics.py` defends that boundary.

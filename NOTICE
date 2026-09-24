@@ -15,14 +15,30 @@ Third-party components and their licences (audit 2026-09-02, docs/research/02):
 NOT covered by the Apache licence:
 
   models/chips_model.pt and models/drinks_model.pt were trained with
-  Ultralytics YOLOv8, which is AGPL-3.0. Those weights are AGPL-derived. They
-  are used only as the closed-set baseline - experiment E1,
-  research/experiments.py:e1_closed_set_baseline, which is the only code in this
-  repository that loads them - and as an auto-labelling tool. Nothing in
-  scanner/ or server/ imports ultralytics or loads them
-  (tests/test_no_ultralytics.py enforces this), the weights are never committed
-  (.gitignore), and ultralytics is in requirements-research.txt only. Do not
-  ship them inside a proprietary product.
+  Ultralytics YOLOv8, which is AGPL-3.0. Those weights are AGPL-derived, and so
+  is any program that loads them together with ultralytics.
+
+  Two places load them. Experiment E1
+  (research/experiments.py:e1_closed_set_baseline) uses them as the closed-set
+  baseline and as an auto-labelling tool. Since 24 September 2026 the till can
+  also be switched into "Closed-set (v1)" mode, which runs them through
+  recognition/closed_set.py:ClosedSetRecogniser so the two approaches can be
+  demonstrated side by side.
+
+  Read this plainly: WHEN THAT MODE IS SELECTED THE RUNNING PROGRAM IS NOT
+  APACHE-2.0. AGPL-3.0 applies to it, including over a network. A distribution
+  of this project that is intended to be Apache-2.0 must ship neither the
+  weights nor ultralytics; without them the mode reports itself unavailable and
+  the till runs entirely on the retrieval recogniser, which is Apache-2.0 and is
+  the default.
+
+  What keeps that separation real: nothing imports ultralytics at module scope,
+  so a till that never selects the mode never loads it
+  (tests/test_no_ultralytics.py enforces the import boundary); the weights are
+  never committed (.gitignore); and ultralytics stays in
+  requirements-research.txt, not requirements.txt.
+
+  Do not ship the weights inside a proprietary product.
 
 Fonts bundled with the till, the dashboard, the iPhone app and the site:
   IBM Plex Sans Thai, IBM Plex Mono   SIL Open Font License 1.1 (assets/fonts/OFL.txt)

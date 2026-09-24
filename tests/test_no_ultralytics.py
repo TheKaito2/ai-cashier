@@ -4,7 +4,14 @@ Ultralytics is AGPL-3.0: anything that imports it and is distributed must be
 AGPL too, which would make the Apache-2.0 licence on this repository false.
 It also drags a training framework onto a Raspberry Pi that never trains.
 Both packages are blocked here at import time; if any module on the till path
-reaches for them, this test fails.
+reaches for them *while being imported*, this test fails.
+
+What this does and does not promise, now that the till has a "Closed-set (v1)"
+mode which deliberately loads both: it guarantees the till starts and runs with
+neither package present.  It does not claim they are never loaded - selecting
+that mode loads them on purpose, and NOTICE says what that does to the licence.
+The boundary being defended is that the *default* program does not depend on
+them, which is what keeps the Apache-2.0 claim true for it.
 """
 import subprocess
 import sys

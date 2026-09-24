@@ -22,7 +22,7 @@ import cv2
 from PySide6.QtCore import QObject, QPoint, Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QPixmap, QPolygon
 from PySide6.QtWidgets import (
-    QDialog, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox,
+    QComboBox, QDialog, QFrame, QHBoxLayout, QLabel, QMainWindow, QMessageBox,
     QPushButton, QScrollArea, QSizePolicy, QVBoxLayout, QWidget,
 )
 
@@ -51,6 +51,13 @@ import paths
 
 logger = logging.getLogger(__name__)
 BAHT = "฿"
+
+#: What the till can recognise with, in the order the selector shows them.
+#: The first two are the same retrieval pipeline differing only in how many
+#: products one scan may return; the third is a different recogniser entirely.
+MODES = (("Multi item", "multi"),
+         ("Single item", "single"),
+         ("Closed-set (v1)", "yolo"))
 
 
 # ---------------------------------------------------------------- small parts
@@ -507,7 +514,21 @@ class MainWindow(QMainWindow):
 
     # ------------------------------------------------------------ recognition
 
-    def _build_pipeline(self) -> RecognitionPipeline:
+    def _build_pipeline(self):
+        """The recogniser for the current mode."""
+        if self.items == "yolo":
+            return self._build_closed_set()
+        return self._build_retrieval()
+
+    def _build_closed_set(self):
+        """Version 1's detector.  Imported here so a till that never selects
+        this mode never loads an AGPL dependency (see NOTICE)."""
+        from recognition.closed_set import (DEFAULT_WEIGHTS, ClosedSetRecogniser,
+                                            class_to_sku)
+        weights = [paths.RESOURCES / "models" / name for name in DEFAULT_WEIGHTS]
+        return ClosedSetRecogniser(weights, class_to_sku(self.db.get_products()))
+
+    def _build_retrieval(self) -> RecognitionPipeline:
         """Assemble propose -> embed -> match, restoring anything already learnt."""
         if not paths.EMBEDDER.exists():
             raise SystemExit(
@@ -553,6 +574,41 @@ class MainWindow(QMainWindow):
             gallery.freeze_centre()
             logger.info("gallery centre frozen over %d products", len(gallery.skus))
 
+    def _on_mode_changed(self, index: int) -> None:
+        """Swap the recogniser under the running window."""
+        wanted = self.mode_box.itemData(index)
+        if wanted == self.items:
+            return
+        previous, self.items = self.items, wanted
+        self.detected, self._overlay = [], []
+        try:
+            self.pipeline = self._build_pipeline()
+        except Exception as exc:
+            # a missing weight file or an absent ultralytics must not leave the
+            # till with no recogniser at all
+            self.items = previous
+            self.mode_box.blockSignals(True)
+            self.mode_box.setCurrentIndex([k for _, k in MODES].index(previous))
+            self.mode_box.blockSignals(False)
+            self.pipeline = self._build_pipeline()
+            self._warn("That mode is not available here", str(exc))
+            return
+
+        closed = self.items == "yolo"
+        self.enrol_btn.setEnabled(not closed)
+        self.enrol_btn.setToolTip(
+            "A trained detector cannot be taught a new product - that is the "
+            "limitation the retrieval modes remove" if closed else "")
+        self.calibrate_btn.setEnabled(not closed)
+        self._refresh_detected()
+        self._refresh_stats()
+        if closed:
+            n = len(self.pipeline.classes)
+            self._set_status(f"Closed-set mode: {n} trained products, "
+                             "no enrolment, unknown items are invisible")
+        else:
+            self._set_status(f"{dict((k, l) for l, k in MODES)[self.items]} mode")
+
     def _save_gallery(self) -> None:
         self._freeze_if_ready(self.pipeline.gallery)
         self.pipeline.gallery.save(paths.gallery_path())
@@ -597,6 +653,22 @@ class MainWindow(QMainWindow):
         lay.addLayout(brand)
         lay.addStretch(1)
 
+        lay.addWidget(_label("MODE", "cardTitle"))
+        self.mode_box = QComboBox()
+        self.mode_box.setCursor(Qt.PointingHandCursor)
+        for label, key in MODES:
+            self.mode_box.addItem(label, key)
+        self.mode_box.setCurrentIndex(
+            max(0, [k for _, k in MODES].index(self.items) if self.items in
+                [k for _, k in MODES] else 0))
+        self.mode_box.setToolTip(
+            "Multi and Single are the retrieval recogniser, which learns a "
+            "product from five photographs.\n"
+            "Closed-set is version 1's trained detector: it knows only the "
+            "twelve products it was trained on and cannot be taught another.")
+        self.mode_box.currentIndexChanged.connect(self._on_mode_changed)
+        lay.addWidget(self.mode_box)
+
         calibrate = QPushButton("Calibrate mat")
         calibrate.setCursor(Qt.PointingHandCursor)
         calibrate.setToolTip("Photograph the empty mat. Do this once per setup, "
@@ -604,10 +676,11 @@ class MainWindow(QMainWindow):
         calibrate.clicked.connect(self.on_calibrate_mat)
         lay.addWidget(calibrate)
 
-        add = QPushButton("Add product")
-        add.setCursor(Qt.PointingHandCursor)
-        add.clicked.connect(lambda: self.on_enrol())
-        lay.addWidget(add)
+        self.enrol_btn = QPushButton("Add product")
+        self.enrol_btn.setCursor(Qt.PointingHandCursor)
+        self.enrol_btn.clicked.connect(lambda: self.on_enrol())
+        lay.addWidget(self.enrol_btn)
+        self.calibrate_btn = calibrate
 
         self.server_pill = _label("dashboard", "pill")
         self.server_pill.setProperty("state", "off")
@@ -704,8 +777,15 @@ class MainWindow(QMainWindow):
     def _refresh_stats(self) -> None:
         gallery = self.pipeline.gallery
         calibrated = self.pipeline.proposer.calibrated
-        self.stats.setText(f"GALLERY {len(gallery.skus)} products · {len(gallery)} views     "
-                           f"MAT {'calibrated' if calibrated else 'NOT CALIBRATED'}")
+        if gallery is None:
+            # closed-set mode has no gallery to grow, and saying so is the point
+            # of having the two modes side by side
+            self.stats.setText(f"TRAINED {len(self.pipeline.classes)} products · "
+                               "cannot learn more     MAT not used")
+        else:
+            self.stats.setText(
+                f"GALLERY {len(gallery.skus)} products · {len(gallery)} views     "
+                f"MAT {'calibrated' if calibrated else 'NOT CALIBRATED'}")
         self.stats.setProperty("state", "ok" if calibrated else "bad")
         _repolish(self.stats)
 

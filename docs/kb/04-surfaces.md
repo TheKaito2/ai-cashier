@@ -14,7 +14,8 @@ daemon thread and the Qt window in the same process.
 | Entry | `app.py:main` |
 | Window | `scanner/ui/main_window.py:MainWindow` |
 | Theme | `scanner/ui/theme.py:TOKENS`, QSS built by `string.Template`; `scanner/ui/theme.py:load_fonts` registers the bundled Plex faces |
-| Flags | `--server-only`, `--lan`, `--port`, `--demo`, `--fullscreen`, `--self-test`, `--scale {simulated,hx711,none}`, `--items {multi,single}` |
+| Flags | `--server-only`, `--lan`, `--port`, `--demo`, `--fullscreen`, `--self-test`, `--scale {simulated,hx711,none}`, `--items {multi,single,yolo}` |
+| Modes | A selector in the top bar switches the recogniser while the till runs.  **Multi item** and **Single item** are the retrieval pipeline; **Closed-set (v1)** is `recognition/closed_set.py:ClosedSetRecogniser`, version 1's trained detector, which disables enrolment and mat calibration because neither applies to it.  A mode that cannot be built — no weights, no ultralytics — says so and reverts |
 | Screenshots | `docs/tools/shoot_qt.py`, offscreen, into `docs/shots/v4d/` |
 
 The camera is the hero: boxes and prices are painted onto the frame itself, the
