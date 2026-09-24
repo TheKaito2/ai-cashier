@@ -249,17 +249,14 @@ def test_closed_set_mode_turns_enrolment_off(till, monkeypatch):
 
 # ------------------------------------------------------- one item at a time
 
-def test_single_item_mode_refuses_two_things_rather_than_choosing_one(till):
-    """Picking one of two would drop a real product from a till, which is an
-    unscanned item leaving the shop.  Picking the *largest* - the obvious
-    implementation - would hand the win to whichever junk region outlived the
-    proposer's objectness rules.  So it refuses and says what it saw."""
+def test_single_item_mode_keeps_one_and_prefers_the_recognised_one(till):
+    """A leftover shadow next to a real product must not be the one that wins."""
     window = till(items="single")
 
-    window._on_scanned([seen("pepsi"), seen("crystal-water")], None, None)
+    window._on_scanned([seen("unknown-thing", status=Status.UNKNOWN),
+                        seen("pepsi")], None, None)
 
-    assert window.detected == []
-    assert "2 things on the mat" in window.status.text()
+    assert [i.sku_id for i in window.detected] == ["pepsi"]
 
 
 def test_single_item_mode_passes_one_item_through(till):

@@ -1070,18 +1070,17 @@ class MainWindow(QMainWindow):
             self._set_view_state("")
             return
 
-        # Single-item mode is a promise by the operator, so the till holds them
-        # to it rather than choosing for them.  Picking one of two would drop a
-        # real product from a till - an unscanned item leaving the shop, which
-        # is the thing verify_basket exists to catch - and picking the largest,
-        # which is the obvious implementation, hands the win to whichever junk
-        # region outlived the proposer's objectness rules.
+        # Single-item mode keeps the best one and says nothing about the rest.
+        # Recognised beats unrecognised, then the highest appearance score, so a
+        # real product wins over a leftover shadow rather than the other way
+        # round.  It does drop a second real product silently - that is the
+        # cost of the mode, and why multi is the default.
         if self.items == "single" and len(items) > 1:
-            self.detected = []
-            self._refresh_detected()
-            self._set_status(f"Single-item mode: {len(items)} things on the mat "
-                             "- place one product and scan again")
-            return
+            def rank(item):
+                top = item.decision.top
+                return (item.status is not Status.UNKNOWN,
+                        top.appearance if top else 0.0)
+            items = [max(items, key=rank)]
 
         self.detected = items
         self._refresh_detected()

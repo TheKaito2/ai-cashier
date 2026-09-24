@@ -170,17 +170,22 @@ flicker frame to frame; and markers mark their own corners, not the mat's extent
 so a hand-typed margin would still be needed.  Four numbers, typed once, after
 the camera is aimed.
 
-## Single-item mode refuses rather than chooses
+## Single-item mode keeps the best one
 
-*24 September 2026.*  `--items single` is a promise by the operator that one
-product is on the mat.  When the till sees more it shows nothing and says how
-many it saw.  Choosing for the operator was rejected: picking the largest hands
-the win to whichever junk region outlived the objectness rules — and it is what
-`recognition/pipeline.py:enrol` does, which is how a bad enrolment happens —
-while picking the most confident silently drops a real product from a till, which
-is an unscanned item leaving the shop and the thing
-`recognition/fusion.py:verify_basket` exists to catch.  Refusal is the only
-option where the operator learns what the machine saw.
+*24 September 2026.*  `--items single` keeps one product per scan: recognised
+beats unrecognised, then the highest appearance score, so a real product wins
+over a leftover shadow.
+
+Refusing instead — showing nothing and reporting how many things were on the mat
+— was built first and taken out on the day.  It is the safer rule in a shop,
+because dropping a second real product is an unscanned item leaving with the
+customer, and it is what `recognition/fusion.py:verify_basket` exists to catch.
+It is also unusable at a counter: the operator gets a scan that did nothing and
+no way forward.  The mode exists to make a queue of single items fast, so it
+behaves that way, and **multi is the default** precisely because it is the one
+that never drops anything.  Never pick the largest: that hands the win to
+whichever junk region outlived the objectness rules, and it is what
+`recognition/pipeline.py:enrol` still does.
 
 ## The old detector is a mode, not a deletion
 
