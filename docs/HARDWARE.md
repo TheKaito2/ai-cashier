@@ -270,14 +270,34 @@ aarch64 from 6.8 onwards are built against glibc 2.39; Bookworm ships 2.36 and
 `python3-pyside6.qtwidgets` are the Bookworm fallbacks). `onnxruntime` and
 `opencv-contrib-python` ship aarch64 wheels that work on either.
 
+One command does the whole install.  The shipped encoder is committed as
+`models/mobilenet_v3_small.onnx`, so the Pi never installs torch and never runs
+an export.
+
 ```bash
-sudo apt install python3-venv libxcb-cursor0     # xcb-cursor only matters under X11
-python3 -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt                   # pulls lgpio on aarch64
-python tools/export_embedder.py                   # or copy models/ from the laptop
+git clone https://github.com/TheKaito2/ai-cashier.git AI-Cashier-v4
+cd AI-Cashier-v4
+./deploy/install.sh                  # apt, venv, systemd unit, starts at boot
+```
+
+It defaults to `--scale none --fullscreen`, which is the defence build.  Any
+flags you pass replace that set entirely: `./deploy/install.sh --scale hx711
+--fullscreen --lan`.  It writes a user unit and a menu entry, enables lingering
+so the till comes up without anyone logging in, and fails loudly with the
+journal if the service does not start.
+
+Afterwards the till is a service, not a command:
+
+```bash
+systemctl --user restart ai-cashier
+journalctl --user -u ai-cashier -f
+```
+
+Two things the installer cannot do, because they need your hands:
+
+```bash
 python tools/make_marker.py                       # print at 100%, glue four down
-python tools/calibrate_scale.py --known-mass 500  # after wiring
-python app.py --scale hx711 --fullscreen          # the real till
+python tools/calibrate_scale.py --known-mass 500  # only if a load cell is wired
 ```
 
 Camera: a USB webcam is read through V4L2 (`/dev/video0`; set
@@ -287,10 +307,9 @@ white balance once the ring light is on - a retrieval system must see the same
 packet the same way at enrolment and at checkout. A CSI camera module is not
 supported: it goes through libcamera, not V4L2.
 
-To start at boot, install `deploy/ai-cashier.service` (instructions in the
-file). To let the shopkeeper's phone open the dashboard, run with `--lan` and
-set `dashboard_pin` in the shop settings first; every write from the network
-needs it.
+To let the shopkeeper's phone open the dashboard, install with `--lan` and set
+`dashboard_pin` in the shop settings first; every write from the network needs
+it.
 
 In the till: **Calibrate mat** with the mat empty, then **Add product** for each
 line you stock.
