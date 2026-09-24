@@ -104,6 +104,8 @@ def _lan_ip() -> str:
 def use_demo_camera() -> None:
     """Swap the webcam for a still image (dev laptops, and offline demos)."""
     import cv2
+    from scanner.detection import camera
+    camera.DEMO_SOURCE = True
     frame = cv2.imread(str(paths.DEMO_FRAME))
     if frame is None:
         raise SystemExit(f"--demo needs {paths.DEMO_FRAME}")

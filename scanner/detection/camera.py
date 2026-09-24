@@ -26,6 +26,12 @@ import cv2
 #: V4L2: 1 = manual exposure, 3 = aperture-priority auto
 V4L2_EXPOSURE_MANUAL = 1
 
+#: True once --demo has swapped the webcam for a still image.  The till has to
+#: know, because a mat calibrated from the demo frame is written to the real
+#: data directory and then silently ruins every scan from the real camera -
+#: every pixel differs from the still, so the whole frame reads as one object.
+DEMO_SOURCE = False
+
 
 class VideoStream:
     """Reads frames continuously so the UI never blocks on the camera."""

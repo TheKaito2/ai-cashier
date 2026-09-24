@@ -238,6 +238,23 @@ def test_a_restricted_item_the_staff_will_not_confirm_stays_out_of_the_cart(till
 
 # ---------------------------------------------------- what the pan says
 
+def test_the_demo_camera_may_not_be_saved_as_the_empty_mat(till, operator, monkeypatch):
+    """--demo replays a still image.  Calibrating from it writes that picture to
+    the real data directory, and then every frame from a real camera differs
+    from it everywhere: the whole frame becomes one object, so a single item
+    still matches and two items never do.  Found on the rig, 24 September 2026."""
+    monkeypatch.setattr(mw.camera_module, "DEMO_SOURCE", True)
+    window = till()
+    mat = paths.mat_path()
+    before = mat.read_bytes() if mat.exists() else None
+
+    window.on_calibrate_mat()
+
+    assert operator.told("demo")
+    assert (mat.read_bytes() if mat.exists() else None) == before, \
+        "the demo frame was written over the real mat"
+
+
 def test_a_basket_that_matches_the_pan_passes_and_is_on_the_record(till):
     window = till(scale=StubCell(75.0))
     put_in_cart(window, "lays-flat-original")            # a 75 g pack label

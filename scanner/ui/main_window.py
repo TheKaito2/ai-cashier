@@ -33,6 +33,7 @@ from recognition.gallery import MIN_SKUS_TO_FREEZE, SkuGallery
 from recognition.pipeline import RecognitionPipeline, RecognisedItem, priors_from_products
 from recognition.proposer import BackgroundSubtractionProposer
 from recognition.scale import ScaleStream
+from scanner.detection import camera as camera_module
 from scanner.detection.camera import VideoStream
 from scanner.models.cart import ShoppingCart
 from scanner.models.product import Product
@@ -1011,6 +1012,13 @@ class MainWindow(QMainWindow):
 
     def on_calibrate_mat(self):
         """Record what the empty mat looks like. Everything else builds on this."""
+        if camera_module.DEMO_SOURCE:
+            self._warn("Not with the demo camera",
+                       "--demo replays a still image, so this would save that "
+                       "picture as your empty mat. Every frame from the real "
+                       "camera then differs from it everywhere and the whole "
+                       "frame reads as one object. Restart without --demo.")
+            return
         ok, frame = self.video.read()
         if not ok or frame is None:
             self._warn("No camera frame", "Check the camera is connected.")
