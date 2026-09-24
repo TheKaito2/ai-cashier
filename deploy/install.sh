@@ -21,10 +21,13 @@ echo "==> system packages"
 sudo apt-get update -qq
 sudo apt-get install -y python3-venv libxcb-cursor0
 
-echo "==> virtualenv"
+# PySide6 alone is about 100 MB and opencv-contrib another 40.  Over the Pi's
+# wifi this step is ten to thirty minutes, so it must not be quiet: a silent
+# half-hour is indistinguishable from a hang, and someone will kill it.
+echo "==> virtualenv - this is the slow part, expect 10-30 minutes"
 python3 -m venv "$ROOT/.venv"
-"$ROOT/.venv/bin/pip" install --quiet --upgrade pip
-"$ROOT/.venv/bin/pip" install --quiet -r "$ROOT/requirements.txt"
+"$ROOT/.venv/bin/pip" install --upgrade pip
+"$ROOT/.venv/bin/pip" install --progress-bar on -r "$ROOT/requirements.txt"
 
 [ -f "$ROOT/models/mobilenet_v3_small.onnx" ] || \
   "$ROOT/.venv/bin/python" "$ROOT/tools/export_embedder.py"
